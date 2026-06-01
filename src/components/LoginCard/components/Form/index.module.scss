@@ -1,0 +1,193 @@
+.formPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.inputGroup {
+    position: relative;
+}
+
+.inputGroup label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+    font-weight: 500;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.iconPrefix {
+    position: absolute;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+    pointer-events: none;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.inputWrapper input {
+    width: 100%;
+    padding: 13px 14px 13px 44px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.inputWrapper input::placeholder {
+    color: rgba(160, 160, 184, 0.45);
+}
+
+.inputWrapper input:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), 0 0 20px -5px var(--accent-glow);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.inputWrapper input:focus ~ .iconPrefix {
+    color: var(--accent-2);
+}
+
+.togglePassword {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+}
+
+.togglePassword svg {
+    width: 18px;
+    height: 18px;
+}
+
+.optionsRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.checkboxLabel input[type="checkbox"]:checked {
+    background: var(--accent-1);
+    border-color: var(--accent-1);
+}
+
+.checkboxLabel input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.linkText {
+    color: var(--accent-2);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.linkText:hover {
+    color: #c084fc;
+    text-decoration: underline;
+}
+
+.submitBtn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(108, 92, 231, 0.35);
+    margin-top: 4px;
+    transition: all 0.35s ease;
+}
+
+.submitBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(108, 92, 231, 0.5);
+}
+
+.submitBtn:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+}
+
+.submitBtn.loading {
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+.btnSpinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+}
+
+.loading .btnSpinner {
+    display: inline-block;
+}
+
+.loading .btnText {
+    display: none;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

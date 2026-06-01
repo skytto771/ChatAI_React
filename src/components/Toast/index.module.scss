@@ -1,0 +1,33 @@
+.toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120px);
+    background: rgba(30, 30, 44, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 12px 22px;
+    border-radius: 30px;
+    color: #fff;
+    font-size: 0.85rem;
+    z-index: 100;
+    letter-spacing: 0.03em;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+}
+
+.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.success {
+    border-color: var(--success);
+    box-shadow: 0 8px 30px rgba(81, 207, 102, 0.2);
+}
+
+.error {
+    border-color: var(--error);
+    box-shadow: 0 8px 30px rgba(255, 107, 107, 0.2);
+}
