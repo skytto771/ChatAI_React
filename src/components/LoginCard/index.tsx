@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import styles from './index.module.scss';
 import LoginForm from './components/Form/LoginForm.tsx';
 import RegisterForm from './components/Form/RegisterForm';
-import SocialButtons from './components/SocialButtons';
+// import SocialButtons from './components/SocialButtons';
 import Toast from '../Toast';
 
 const LoginCard = () => {
@@ -23,9 +23,9 @@ const LoginCard = () => {
     };
 
     const handleRegisterSuccess = (email: string) => {
-        showToast('🎉 注册成功！自动跳转中...', 'success');
+        showToast('🎉 注册成功！请前往登录', 'success');
         setTimeout(() => {
-        setActiveTab('login');
+            // setActiveTab('login');
         }, 1500);
     };
 

@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import styles from './index.module.scss';
-import { isValidEmail } from '../../../../utils/validators';
+import { isValidEmail } from '@/utils/validators';
+import {http} from '@/utils/httpUtil'
+import api from '@/api'
 
 interface RegisterFormProps {
   onSuccess: (email: string) => void;
@@ -15,10 +17,16 @@ const RegisterForm = ({ onSuccess, onError }: RegisterFormProps) => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = () => {
-        if (!username || !email || !password) {
-            onError('⚠️ 请填写所有字段');
-            return;
+    const handleSubmit = async () => {
+        const formOb = ['用户名','邮箱','密码']
+        const formVal = [username,email,password]
+        const submitData = {username,email,password}
+
+        for(let index in formVal){
+            if (!formVal[index]) {
+                onError(`⚠️ 请填写${formOb[index]}`);
+                return;
+            }
         }
         if (username.length < 2) {
             onError('⚠️ 用户名至少2个字符');
@@ -37,11 +45,16 @@ const RegisterForm = ({ onSuccess, onError }: RegisterFormProps) => {
             return;
         }
 
+        
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+        try{
+            await http.post(api.user.register,submitData)
             onSuccess(email);
-        }, 1800);
+            setLoading(false);
+        }catch(err){
+            onError(err as string)
+            setLoading(false);
+        }
     };
 
     return (
