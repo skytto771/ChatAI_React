@@ -11,9 +11,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = () => {
     const context = useContext(ThemeContext);
-    if (!context) {
-        throw new Error('useTheme must be used within ThemeProvider');
-    }
+    if (!context) throw new Error('useTheme must be used within ThemeProvider');
     return context;
 };
 
@@ -22,7 +20,7 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-    const [theme, setTheme] = useLocalStorage<Theme>('ai-chat-theme', 'default');
+    const [theme, setTheme] = useLocalStorage<Theme>('ai-theme', 'default');
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme === 'default' ? '' : theme);

@@ -190,3 +190,13 @@
         display: none;
     }
 }
+
+.modelTag {
+    font-size: 0.65rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}

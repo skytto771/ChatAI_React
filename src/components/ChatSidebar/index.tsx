@@ -1,6 +1,6 @@
 import React from 'react';
-import { type Chat } from '@/types';
-import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { type Chat, MODEL_DISPLAY_NAMES } from '@/types';
+import UserProfile from '@/components/UserProfile';
 import styles from './index.module.scss';
 
 interface ChatSidebarProps {
@@ -8,6 +8,8 @@ interface ChatSidebarProps {
     activeChatId: string;
     onNewChat: () => void;
     onSelectChat: (chatId: string) => void;
+    onOpenSettings: () => void;
+    onLogout: () => void;
     isOpen: boolean;
     onClose: () => void;
 }
@@ -17,6 +19,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     activeChatId,
     onNewChat,
     onSelectChat,
+    onOpenSettings,
+    onLogout,
     isOpen,
     onClose,
 }) => {
@@ -25,7 +29,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         const now = new Date();
         const diff = now.getTime() - timestamp;
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
         if (days === 0) return '今天';
         if (days === 1) return '昨天';
         if (days < 7) return `${days}天前`;
@@ -40,13 +43,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         <div className={styles.logoIcon}>✨</div>
                         AI Chat
                     </div>
-                    <button
-                        className={styles.closeBtn}
-                        onClick={onClose}
-                        aria-label="关闭侧边栏"
-                    >
-                        ✕
-                    </button>
+                    <button className={styles.closeBtn} onClick={onClose} aria-label="关闭侧边栏">✕</button>
                 </div>
                 <button className={styles.newChatBtn} onClick={onNewChat}>
                     <span>＋</span> 新建对话
@@ -63,12 +60,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                 <div className={styles.chatTitle}>{chat.title}</div>
                                 <div className={styles.chatDate}>{formatDate(chat.updatedAt)}</div>
                             </div>
+                            <span className={styles.modelTag}>{MODEL_DISPLAY_NAMES[chat.model] || chat.model}</span>
                         </div>
                     ))}
                 </div>
                 <div className={styles.sidebarFooter}>
-                    <div className={styles.themeLabel}>🎨 应用主题</div>
-                    <ThemeSwitcher />
+                    <UserProfile onOpenSettings={onOpenSettings} onLogout={onLogout} />
                 </div>
             </div>
             {isOpen && <div className={styles.overlay} onClick={onClose} />}
