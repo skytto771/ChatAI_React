@@ -1,4 +1,4 @@
-.app {
+.layout {
     height: 100vh;
     width: 100vw;
     display: flex;
@@ -17,8 +17,7 @@
     justify-content: center;
     gap: 32px;
     width: 100%;
-    max-width: 960px;
-    height: 625px;
+    height: 100%;
     padding: 20px;
 }
 

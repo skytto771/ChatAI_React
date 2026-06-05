@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './index.module.scss';
+import { http } from '@/utils/httpUtil'
+import api from '@/api'
 
 interface LoginFormProps {
     onSuccess: (account: string) => void;
@@ -14,23 +16,64 @@ const LoginForm = ({ onSuccess, onError, onShake }: LoginFormProps) => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = () => {
-        if (!account || !password) {
-            onError('⚠️ 请填写所有字段');
-            return;
-        }
-        if (!account) {
-            onError('⚠️ 请输入有效的邮箱地址');
-            return;
+    const expireTime = 60*60*24*7 //7天
+    const handleSubmit = async () => {
+        const formOb = ['用户名或邮箱','密码']
+        const formVal = [account,password]
+        const submitData:any = {account,password}
+
+        for(let index in formVal){
+            if (!formVal[index]) {
+                onError(`请填写${formOb[index]}`);
+                return;
+            }
         }
 
         setLoading(true);
-        setTimeout(() => {
+        try{
+            await http.post(api.user.login, submitData)
+
+            if (remember) {
+                const date = new Date();
+                submitData.loginDate = date;
+                localStorage.setItem('chatAi_LoginAccount', JSON.stringify(submitData));
+            } else if (!remember) {
+                localStorage.removeItem('chatAi_LoginAccount');
+            }
+
             setLoading(false);
             onSuccess(account);
-            onError(''); // clear errors
-        }, 1800);
+        }catch(err){
+            setLoading(false);
+            onError(err as string);
+        }
     };
+
+    const handleRemember = (value: boolean) => {
+        localStorage.setItem('chatAi_Account', value.toString());
+        setRemember(value);
+    };
+
+    useEffect(() => {
+        const remember = localStorage.getItem('chatAi_Account') === 'true';
+        if(remember){
+            setRemember(true);
+            const storedAccount = localStorage.getItem('chatAi_LoginAccount');
+            if (storedAccount) {
+                const { account, password, loginDate } = JSON.parse(storedAccount);
+                const currentDate = new Date();
+                const loginDateObj = new Date(loginDate);
+                const timeDifference = currentDate.getTime() - loginDateObj.getTime();
+                console.log(timeDifference,expireTime)
+                if (timeDifference > expireTime) {
+                    localStorage.removeItem('chatAi_LoginAccount');
+                }else{
+                    setAccount(account);
+                    setPassword(password);
+                }
+            }
+        }
+    }, []);
 
     return (
         <div className={styles.formPanel}>
@@ -87,7 +130,7 @@ const LoginForm = ({ onSuccess, onError, onShake }: LoginFormProps) => {
             </div>
             <div className={styles.optionsRow}>
                 <label className={styles.checkboxLabel}>
-                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                <input type="checkbox" checked={remember} onChange={(e) => handleRemember(e.target.checked)} />
                 <span>记住我</span>
                 </label>
                 <span className={styles.linkText} onClick={() => onError('🔗 重置链接已发送至您的邮箱（演示）')}>

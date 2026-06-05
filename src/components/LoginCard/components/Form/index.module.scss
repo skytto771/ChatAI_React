@@ -21,6 +21,33 @@
     position: relative;
     display: flex;
     align-items: center;
+    input {
+        width: 100%;
+        padding: 13px 14px 13px 44px;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: inherit;
+        letter-spacing: 0.02em;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+    
+    input::placeholder {
+        color: rgba(160, 160, 184, 0.45);
+    }
+    
+    input:focus {
+        border-color: var(--input-focus-border);
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), 0 0 20px -5px var(--accent-glow);
+        background: rgba(255, 255, 255, 0.06);
+    }
+    
+    input:focus ~ .iconPrefix {
+        color: var(--accent-2);
+    }
 }
 
 .iconPrefix {
@@ -34,33 +61,83 @@
     transition: color 0.3s ease;
 }
 
-.inputWrapper input {
-    width: 100%;
-    padding: 13px 14px 13px 44px;
+.verifiCode {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.codeInput {
+    flex: 1;
+    padding: 13px 14px;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     border-radius: 12px;
     color: var(--text-primary);
     font-size: 0.9rem;
     font-family: inherit;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
     transition: all 0.3s ease;
     outline: none;
+    width: 100%;
+    text-align: center;
 }
 
-.inputWrapper input::placeholder {
+.codeInput::placeholder {
     color: rgba(160, 160, 184, 0.45);
+    letter-spacing: 0.02em;
 }
 
-.inputWrapper input:focus {
+.codeInput:focus {
     border-color: var(--input-focus-border);
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), 0 0 20px -5px var(--accent-glow);
     background: rgba(255, 255, 255, 0.06);
 }
 
-.inputWrapper input:focus ~ .iconPrefix {
+.sendCodeBtn {
+    white-space: nowrap;
+    padding: 13px 16px;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 12px;
     color: var(--accent-2);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    backdrop-filter: blur(4px);
+    outline: none;
 }
+
+.sendCodeBtn:hover:not(:disabled) {
+    background: rgba(168, 85, 247, 0.22);
+    border-color: rgba(168, 85, 247, 0.45);
+    box-shadow: 0 0 14px -3px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+.sendCodeBtn:active:not(:disabled) {
+    transform: translateY(0) scale(0.96);
+    transition: all 0.1s ease;
+}
+
+.sendCodeBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(128, 128, 160, 0.1);
+    border-color: rgba(128, 128, 160, 0.15);
+    color: var(--text-secondary);
+    box-shadow: none;
+    transform: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 
 .togglePassword {
     position: absolute;
@@ -73,12 +150,12 @@
     z-index: 2;
     display: flex;
     align-items: center;
+    svg {
+        width: 18px;
+        height: 18px;
+    }
 }
 
-.togglePassword svg {
-    width: 18px;
-    height: 18px;
-}
 
 .optionsRow {
     display: flex;
@@ -93,48 +170,48 @@
     align-items: center;
     gap: 7px;
     cursor: pointer;
+    input[type="checkbox"] {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        flex-shrink: 0;
+    }
+    
+    input[type="checkbox"]:checked {
+        background: var(--accent-1);
+        border-color: var(--accent-1);
+    }
+    
+    input[type="checkbox"]:checked::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 5px;
+        height: 9px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
 }
 
-.checkboxLabel input[type="checkbox"] {
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
-    background: transparent;
-    cursor: pointer;
-    position: relative;
-    flex-shrink: 0;
-}
-
-.checkboxLabel input[type="checkbox"]:checked {
-    background: var(--accent-1);
-    border-color: var(--accent-1);
-}
-
-.checkboxLabel input[type="checkbox"]:checked::after {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 1px;
-    width: 5px;
-    height: 9px;
-    border: solid #fff;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
 
 .linkText {
     color: var(--accent-2);
     text-decoration: none;
     font-weight: 500;
     cursor: pointer;
+    &:hover {
+        color: #c084fc;
+        text-decoration: underline;
+    }
 }
 
-.linkText:hover {
-    color: #c084fc;
-    text-decoration: underline;
-}
 
 .submitBtn {
     width: 100%;
@@ -152,17 +229,17 @@
     box-shadow: 0 6px 24px rgba(108, 92, 231, 0.35);
     margin-top: 4px;
     transition: all 0.35s ease;
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(108, 92, 231, 0.5);
+    }
+    
+    &:active {
+        transform: translateY(0) scale(0.98);
+        transition: all 0.1s ease;
+    }
 }
 
-.submitBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 32px rgba(108, 92, 231, 0.5);
-}
-
-.submitBtn:active {
-    transform: translateY(0) scale(0.98);
-    transition: all 0.1s ease;
-}
 
 .submitBtn.loading {
     pointer-events: none;

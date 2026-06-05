@@ -4,11 +4,17 @@ import "./index.scss";
 import "./assets/styles/global.scss";
 
 import { RouterProvider } from "react-router/dom";
+import { ToastProvider } from '@/context/ToastContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { router } from './router'
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router}>
-    </RouterProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <RouterProvider router={router}>
+        </RouterProvider>
+      </ToastProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

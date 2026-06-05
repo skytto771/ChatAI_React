@@ -3,45 +3,32 @@ import styles from './index.module.scss';
 import LoginForm from './components/Form/LoginForm.tsx';
 import RegisterForm from './components/Form/RegisterForm';
 // import SocialButtons from './components/SocialButtons';
-import Toast from '../Toast';
+import { useNavigate } from 'react-router';
+import { useToast } from '@/context/ToastContext';
 
 const LoginCard = () => {
+    const navigate = useNavigate();
+    const toast = useToast();
+
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | '' } | null>(null);
-
-    const showToast = useCallback((message: string, type: 'success' | 'error' | '' = '') => {
-        setToast({ message, type });
-    }, []);
-
-    const clearToast = useCallback(() => {
-        setToast(null);
-    }, []);
-
     const handleLoginSuccess = (email: string) => {
-        showToast('✅ 登录成功！欢迎回来 🎉', 'success');
-        console.log('登录数据:', { email });
+        toast.success('登录成功！欢迎回来');
+        navigate('/')
     };
 
     const handleRegisterSuccess = (email: string) => {
-        showToast('🎉 注册成功！请前往登录', 'success');
+        toast.success('注册成功！正在跳转');
         setTimeout(() => {
-            // setActiveTab('login');
+            setActiveTab('login');
         }, 1500);
     };
 
-    const handleSocialLogin = (provider: string) => {
-        showToast(`🔐 正在跳转至 ${provider} 登录...（演示）`, 'success');
-    };
+    // const handleSocialLogin = (provider: string) => {
+    //     showToast(`🔐 正在跳转至 ${provider} 登录...（演示）`, 'success');
+    // };
 
     return (
         <>
-            {toast && (
-                <Toast
-                message={toast.message}
-                type={toast.type}
-                onClose={clearToast}
-                />
-            )}
             <div className={styles.loginCard}>
                 <div className={styles.logoArea}>
                     <div className={styles.aiIcon}>
@@ -71,9 +58,9 @@ const LoginCard = () => {
                 </div>
 
                 {activeTab === 'login' ? (
-                    <LoginForm onSuccess={handleLoginSuccess} onError={showToast} onShake={() => {}} />
+                    <LoginForm onSuccess={handleLoginSuccess} onError={toast.error} onShake={() => {}} />
                 ) : (
-                    <RegisterForm onSuccess={handleRegisterSuccess} onError={showToast} />
+                    <RegisterForm onSuccess={handleRegisterSuccess} onError={toast.error} />
                 )}
 
                 {/* <SocialButtons onClick={handleSocialLogin} /> */}

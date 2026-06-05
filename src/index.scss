@@ -12,6 +12,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 自定义滚动条（Firefox） */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
 /* 自定义滚动条（适用于 Webkit 浏览器） */
 ::-webkit-scrollbar {
     width: 6px;
@@ -30,12 +36,6 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);        /* 悬停时变亮 */
-}
-
-/* 自定义滚动条（Firefox） */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 // 加载骨架屏

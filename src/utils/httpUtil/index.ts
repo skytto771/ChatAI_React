@@ -57,6 +57,21 @@ http.interceptors.response.use(
             case 2003:
                 message = '权限不足';
                 break;
+            case 3000:
+                message = '用户不存在';
+                break;
+            case 3001:
+                message = '用户已存在';
+                break;
+            case 3002:
+                message = '密码错误';
+                break;
+            case 4000:
+                message = '请求的资源不存在';
+                break;
+            case 4001:
+                message = '资源已存在';
+                break;
             default:
                 message = '未知错误';
         }

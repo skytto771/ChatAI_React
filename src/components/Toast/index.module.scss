@@ -31,3 +31,13 @@
     border-color: var(--error);
     box-shadow: 0 8px 30px rgba(255, 107, 107, 0.2);
 }
+
+.info {
+    border-color: var(--info);
+    box-shadow: 0 8px 30px rgba(51, 191, 255, 0.2);
+}
+
+.warning { 
+    border-color: var(--warning);
+    box-shadow: 0 8px 30px rgba(255, 153, 0, 0.2);
+}

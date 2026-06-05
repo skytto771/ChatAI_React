@@ -3,12 +3,12 @@ import styles from './index.module.scss';
 
 interface ToastProps {
     message: string;
-    type?: 'success' | 'error' | '';
+    type: 'success' | 'error' | 'info' | 'warning';
     duration?: number;
     onClose: () => void;
 }
 
-const Toast = ({ message, type = '', duration = 2800, onClose }: ToastProps) => {
+const Toast = ({ message, type = 'info', duration = 2800, onClose }: ToastProps) => {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {

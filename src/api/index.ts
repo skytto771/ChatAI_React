@@ -14,6 +14,9 @@ const api = {
         cancelUpload: '/upload/cancelUpload',
         getFileUrl: '/upload/getFileUrl',
         uploadSmall: '/upload/uploadSmall',
+    },
+    verification:{
+        sendCode: '/verification/sendCode',
     }
 }
 
