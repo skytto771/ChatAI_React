@@ -19,6 +19,20 @@
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     --danger: #ef4444;
     --danger-hover: #f87171;
+
+    /* 代码高亮颜色 */
+    --code-inline-bg: rgba(168, 85, 247, 0.12);  /* 淡紫底，微透 */
+    --code-block-bg: #0f0f1a;                    /* 深色实底 */
+    --code-keyword: #c084fc;
+    --code-string: #6ee7b7;
+    --code-function: #60a5fa;
+    --code-number: #fbbf24;
+    --code-comment: #6b7280;
+    --code-property: #f472b6;
+    --code-operator: #a78bfa;
+    --code-punctuation: #9ca3af;
+    --code-class-name: #f59e0b;
+    --code-regex: #f87171;
 }
 
 [data-theme="aurora"] {
@@ -39,6 +53,19 @@
     --hover: rgba(52, 211, 153, 0.06);
     --scrollbar: rgba(80, 200, 120, 0.2);
     --shadow: 0 8px 32px rgba(0, 30, 15, 0.5);
+
+    --code-inline-bg: rgba(52, 211, 153, 0.12);
+    --code-block-bg: #091a11;
+    --code-keyword: #34d399;
+    --code-string: #fbbf24;
+    --code-function: #60a5fa;
+    --code-number: #fb923c;
+    --code-comment: #6b7280;
+    --code-property: #38bdf8;
+    --code-operator: #34d399;
+    --code-punctuation: #9ca3af;
+    --code-class-name: #f59e0b;
+    --code-regex: #f87171;
 }
 
 [data-theme="sunset"] {
@@ -59,6 +86,19 @@
     --hover: rgba(249, 115, 22, 0.06);
     --scrollbar: rgba(255, 140, 60, 0.2);
     --shadow: 0 8px 32px rgba(40, 20, 10, 0.5);
+
+    --code-inline-bg: rgba(249, 115, 22, 0.12);
+    --code-block-bg: #1a120c;
+    --code-keyword: #fb923c;
+    --code-string: #34d399;
+    --code-function: #60a5fa;
+    --code-number: #fbbf24;
+    --code-comment: #6b7280;
+    --code-property: #f97316;
+    --code-operator: #fb923c;
+    --code-punctuation: #9ca3af;
+    --code-class-name: #fbbf24;
+    --code-regex: #f87171;
 }
 
 [data-theme="frost"] {
@@ -79,6 +119,19 @@
     --hover: rgba(59, 130, 246, 0.06);
     --scrollbar: rgba(100, 180, 255, 0.2);
     --shadow: 0 8px 32px rgba(10, 20, 40, 0.5);
+
+    --code-inline-bg: rgba(59, 130, 246, 0.12);
+    --code-block-bg: #0c1420;
+    --code-keyword: #60a5fa;
+    --code-string: #6ee7b7;
+    --code-function: #818cf8;
+    --code-number: #38bdf8;
+    --code-comment: #6b7280;
+    --code-property: #a78bfa;
+    --code-operator: #60a5fa;
+    --code-punctuation: #9ca3af;
+    --code-class-name: #fbbf24;
+    --code-regex: #f87171;
 }
 
 * {

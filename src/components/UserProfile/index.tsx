@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useUser } from '@/context/UserContext';
 import styles from './index.module.scss';
+import { useUserStore } from '@/store';
 
 interface UserProfileProps {
     onOpenSettings: () => void;
@@ -8,7 +8,7 @@ interface UserProfileProps {
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ onOpenSettings, onLogout }) => {
-    const { settings } = useUser();
+    const userStore = useUserStore()
     const [isExpanded, setIsExpanded] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -28,9 +28,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onOpenSettings, onLogout }) =
     return (
         <div className={styles.userProfileContainer} ref={containerRef}>
             <div className={`${styles.userProfile} ${isExpanded ? styles.expanded : ''}`} onClick={togglePopup}>
-                <div className={styles.userAvatar}>🧑‍🚀</div>
+                {userStore.user.avatarUrl ? <div className={styles.userAvatar}>
+                    <img src='' alt="" />
+                </div>
+                :<div className={styles.userAvatar}>🧑‍🚀</div>}
                 <div className={styles.userInfoText}>
-                    <span className={styles.userName}>{settings.nickname}</span>
+                    <span className={styles.userName}>{userStore.user.nickname || userStore.user.username}</span>
                     <span className={styles.userStatus}>
                         <span className={styles.statusDot}></span>在线
                     </span>

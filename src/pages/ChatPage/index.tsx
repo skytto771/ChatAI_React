@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { Message } from '@/types';
-import { useChatStore } from '@/store/chatStore';
-import { useUser } from '@/context/UserContext';
-import { generateSmartReply } from '@/utils/aiReplyGenerator';
+import { useChatStore, useUserStore } from '@/store';
 import { useToast } from '@/context/ToastContext'
 import ChatSidebar from '@/components/ChatSidebar';
 import ChatMessage from '@/components/ChatMessage';
@@ -11,7 +8,9 @@ import TypingIndicator from '@/components/TypingIndicator';
 import ModelBadge from '@/components/ModelBadge';
 import NewChatModal from '@/components/NewChatModal';
 import SettingsModal from '@/components/SettingsModal';
+import { session } from '@/utils'
 import styles from './index.module.scss';
+import { useNavigate } from 'react-router';
 
 const Chat: React.FC = () => {
     const {
@@ -19,99 +18,144 @@ const Chat: React.FC = () => {
         activeChatId,
         isResponding,
         loadChats,
+        loadCurMessages,
         addMessage,
+        generateAiReply,
         setActiveChatId,
         setIsResponding,
+        deleteChat,
         updateChatTitle,
+        loadModelSettings
     } = useChatStore();
     const toast = useToast()
-    const { settings } = useUser();
+    const navigate = useNavigate();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const responseTimeoutRef = useRef<number | null>(null);
     const activeChat = chats.find(c => c.id === activeChatId);
+    const messages = activeChat?.messages || [];
+    const activeChatLastMessage = messages[messages.length - 1]
+
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const isNearBottomRef = useRef(true); // 标记用户是否靠近底部
+
+    const isInitialMountRef = useRef(true);
+    const previousChatIdRef = useRef(activeChatId);
+
+    // 加载会话信息
+    useEffect(() => {
+        return ()=>{
+            loadChats().catch(err=>toast.error(err));
+        }
+    }, [loadChats]);
 
     // 加载聊天数据
     useEffect(() => {
-        loadChats(settings.defaultModel);
-    }, [loadChats, settings.defaultModel]);
-
-    // 滚动到底部
-    const scrollToBottom = useCallback(() => {
-        if (settings.autoScroll) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (activeChatId) {
+            loadCurMessages(activeChatId).catch(err=>{
+                toast.error(err);
+            })
         }
-    }, [settings.autoScroll]);
+    }, [activeChatId]);
 
+    // 切换会话时重置滚动相关状态
     useEffect(() => {
-        scrollToBottom();
-    }, [activeChat?.messages, isResponding, scrollToBottom]);
-
-    // 清理定时器
-    const clearResponseTimeout = useCallback(() => {
-        if (responseTimeoutRef.current) {
-            clearTimeout(responseTimeoutRef.current);
-            responseTimeoutRef.current = null;
+        if (previousChatIdRef.current !== activeChatId) {
+            // 会话切换，重置滚动恢复标记
+            isInitialMountRef.current = true;
+            previousChatIdRef.current = activeChatId;
         }
-    }, []);
+    }, [activeChatId]);
 
-    // 播放提示音
-    const playSound = useCallback(() => {
-        if (settings.soundEnabled) {
-            // 简单的提示音（使用 Web Audio 或空函数，实际可加音频）
-            // 此处为简化，仅模拟 console
-            console.log('🔔 提示音 (可接入实际音频)');
+    // 统一的滚动控制
+    useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        
+        const threshold = 120;
+        
+        // 恢复滚动位置（初始化）
+        const scrollPositions = JSON.parse(localStorage.getItem('conversations_scrollTop') || '{}');
+        const savedScrollTop = scrollPositions[activeChatId];
+        if (savedScrollTop !== undefined && !isResponding) {
+            if(savedScrollTop !== 0){
+                // 等待 DOM 完全渲染
+                const waitForStableHeight = () => {
+                    const currentHeight = container.scrollHeight;
+                    requestAnimationFrame(() => {
+                        const newHeight = container.scrollHeight;
+                        if (newHeight === currentHeight) {
+                            // 高度稳定了，执行滚动
+                            container.scrollTo({
+                                top: savedScrollTop,
+                                behavior: 'smooth'
+                            });
+                            if(savedScrollTop <= newHeight){
+                                isInitialMountRef.current = false
+                            }
+                        } else {
+                            // 高度还在变化，重试
+                            waitForStableHeight();
+                        }
+                    });
+                };
+                waitForStableHeight();
+            }
         }
-    }, [settings.soundEnabled]);
+        
+        const handleScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = container;
+            isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < threshold;
+            // 切换完成后才存储
+            if (!isInitialMountRef.current && !isResponding) {
+                const newPositions = JSON.parse(localStorage.getItem('conversations_scrollTop') || '{}');
+                newPositions[activeChatId] = scrollTop;
+                localStorage.setItem('conversations_scrollTop', JSON.stringify(newPositions));
+            }
+        };
 
-    // 添加消息并滚动
-    const handleAddMessage = useCallback((chatId: string, role: 'user' | 'ai', text: string) => {
-        addMessage(chatId, role, text);
-        if (role === 'ai') playSound();
-    }, [addMessage, playSound]);
+        if (isResponding && isNearBottomRef.current && !isInitialMountRef.current) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'auto' // 流式响应中用 auto，不要用 smooth
+            });
+        }
+        
+        container.addEventListener('scroll', handleScroll);
+        
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+        };
+    }, [activeChatId, isResponding, messages.length,activeChatLastMessage?.content]);
 
-    // 模拟 AI 回复
-    const simulateAIResponse = useCallback(
-        (chatId: string, userMessage: string) => {
-            clearResponseTimeout();
+    const handleAIResponse = useCallback(
+        async (chatId: string) => {
             setIsResponding(true);
-
-            responseTimeoutRef.current = setTimeout(() => {
-                const chat = chats.find(c => c.id === chatId);
-                const reply = generateSmartReply(
-                    userMessage,
-                    chat?.systemPrompt || '',
-                    chat?.userPrompt || ''
-                );
-                handleAddMessage(chatId, 'ai', reply);
+            try{
+                await generateAiReply(chatId)
                 setIsResponding(false);
-                responseTimeoutRef.current = null;
-            }, 1000 + Math.random() * 1500);
+            }catch(error){
+                toast.error(error as string);
+            }
         },
-        [clearResponseTimeout, setIsResponding, chats, handleAddMessage]
+        [ setIsResponding]
     );
 
     // 发送消息
     const handleSendMessage = useCallback(
-        (text: string) => {
+        async (text: string) => {
             if (isResponding || !activeChatId) return;
-
-            handleAddMessage(activeChatId, 'user', text);
-
-            // 如果是新对话且标题还是默认的，更新标题
-            const currentChat = chats.find(c => c.id === activeChatId);
-            if (currentChat && currentChat.title === '新对话' && currentChat.messages.length === 0) {
-                const newTitle = text.slice(0, 20) + (text.length > 20 ? '...' : '');
-                updateChatTitle(activeChatId, newTitle);
+            try{
+                setIsResponding(true);
+                await addMessage(activeChatId, 'user', text, 0);
+                await handleAIResponse(activeChatId);
+            }catch(error){
+                toast.error(error as string)
             }
-
-            simulateAIResponse(activeChatId, text);
         },
-        [activeChatId, isResponding, handleAddMessage, chats, updateChatTitle, simulateAIResponse]
+        [activeChatId, isResponding]
     );
 
     // 新建对话按钮
@@ -124,6 +168,19 @@ const Chat: React.FC = () => {
         setIsSidebarOpen(false);
     };
 
+    // 删除对话
+    const handleDeleteChat = async (chatId: string) => {
+        try{
+            await deleteChat(chatId);
+            if (activeChatId === chatId) {
+                setActiveChatId('');
+            }
+            toast.success('删除成功');
+        }catch(err){
+            toast.error(err as string);
+        }
+    }
+
     // 切换对话
     const handleSelectChat = useCallback(
         (chatId: string) => {
@@ -131,18 +188,17 @@ const Chat: React.FC = () => {
                 toast.warning('请等待当前回复完成后再切换对话');
                 return;
             }
-            clearResponseTimeout();
             setIsResponding(false);
             setActiveChatId(chatId);
             setIsSidebarOpen(false);
         },
-        [isResponding, clearResponseTimeout, setIsResponding, setActiveChatId]
+        [isResponding, setIsResponding, setActiveChatId]
     );
 
     // 登出
-    const handleLogout = () => {
-        toast.success('👋 已登出，演示模式');
-        // 实际可跳转登录页
+    const handleLogout = async () => {
+        session.delSession()
+        navigate('/login');
     };
 
     // 快捷键
@@ -158,15 +214,14 @@ const Chat: React.FC = () => {
             }
         };
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+            try{
+                loadModelSettings()
+            }catch(err){
+                toast.error(err as string)}
+        }
     }, []);
-
-    // 组件卸载清理
-    useEffect(() => {
-        return () => clearResponseTimeout();
-    }, [clearResponseTimeout]);
-
-    const messages = activeChat?.messages || [];
 
     return (
         <div className={styles.chat}>
@@ -175,6 +230,8 @@ const Chat: React.FC = () => {
                 activeChatId={activeChatId}
                 onNewChat={handleNewChat}
                 onSelectChat={handleSelectChat}
+                onDeleteChat={handleDeleteChat}
+                onRenameChat={updateChatTitle}
                 onOpenSettings={() => setIsSettingsModalOpen(true)}
                 onLogout={handleLogout}
                 isOpen={isSidebarOpen}
@@ -183,13 +240,13 @@ const Chat: React.FC = () => {
             <div className={styles.main}>
                 <div className={styles.chatHeader}>
                     <button className={styles.menuToggle} onClick={() => setIsSidebarOpen(true)} aria-label="打开菜单">☰</button>
-                    <h2>🤖 智能对话</h2>
+                    <h2>🤖 {activeChat?.title || '智能对话'}</h2>
                     {activeChat && <ModelBadge model={activeChat.model} />}
                     <span className={styles.statusBadge}>● 在线</span>
                 </div>
-                <div className={styles.messagesContainer}>
+                <div className={styles.messagesContainer} ref={messagesContainerRef}>
                     {messages.map((message) => (
-                        <ChatMessage key={message.id} role={message.role} text={message.text} />
+                        <ChatMessage key={message.id} role={message.role} text={message.content} />
                     ))}
                     {isResponding && (
                         <div className={`${styles.message} ${styles.ai}`}>
@@ -199,7 +256,6 @@ const Chat: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    <div ref={messagesEndRef} />
                 </div>
                 <InputArea onSend={handleSendMessage} disabled={isResponding} />
             </div>

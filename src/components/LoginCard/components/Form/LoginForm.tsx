@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from './index.module.scss';
-import { http } from '@/utils/httpUtil'
+import { http, session } from '@/utils'
 import api from '@/api'
 
 interface LoginFormProps {
@@ -20,7 +20,7 @@ const LoginForm = ({ onSuccess, onError, onShake }: LoginFormProps) => {
     const handleSubmit = async () => {
         const formOb = ['用户名或邮箱','密码']
         const formVal = [account,password]
-        const submitData:any = {account,password}
+        const submitData:any = {account,password,remember:false}
 
         for(let index in formVal){
             if (!formVal[index]) {
@@ -31,15 +31,13 @@ const LoginForm = ({ onSuccess, onError, onShake }: LoginFormProps) => {
 
         setLoading(true);
         try{
-            await http.post(api.user.login, submitData)
-
             if (remember) {
-                const date = new Date();
-                submitData.loginDate = date;
-                localStorage.setItem('chatAi_LoginAccount', JSON.stringify(submitData));
-            } else if (!remember) {
-                localStorage.removeItem('chatAi_LoginAccount');
+                submitData.remember = true
             }
+            const res = await http.post(api.user.login, submitData)
+            const resD = res.data;
+
+            session.setSession(resD.token, resD.user.id)
 
             setLoading(false);
             onSuccess(account);

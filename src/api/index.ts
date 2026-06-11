@@ -17,6 +17,24 @@ const api = {
     },
     verification:{
         sendCode: '/verification/sendCode',
+    },
+    conversation:{
+        addConversation: '/conversation/addConversation',
+        getConversationList: '/conversation/getConversationList',
+        stats: '/conversation/stats',
+        getConversationById: '/conversation/getConversationById',
+        updateConversation: '/conversation/updateConversation',
+        delConversation: '/conversation/delConversation',
+        archived: '/conversation/archived',
+    },
+    message: {
+        addMessage: '/message/addMessage',
+        getMessageList: '/message/getMessageList',
+        generateAiReply: '/message/generateAiReply',
+    },
+    modelSettings:{
+        getSettings: '/modelSettings/getSettings',
+        updateSettings: '/modelSettings/updateSettings',
     }
 }
 

@@ -16,7 +16,7 @@
         }
     }
 
-    &.ai {
+    &.assistant {
         .avatar {
             background: linear-gradient(135deg, var(--accent), var(--accent-light));
             color: #fff;
@@ -48,6 +48,14 @@
     border: 1px solid rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(4px);
     word-break: break-word;
+}
+
+.messageText{
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-break: break-word;
+    transition: background .3s;
+    position: relative;
 }
 
 @keyframes msgFadeIn {

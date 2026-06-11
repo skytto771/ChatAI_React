@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { AVAILABLE_MODELS } from '@/types';
-import { useUser } from '@/context/UserContext';
 import { useChatStore } from '@/store';
 import styles from './index.module.scss';
+import api from '@/api';
+import { http } from '@/utils';
+import { useToast } from '@/context/ToastContext';
 
 interface NewChatModalProps {
     isOpen: boolean;
@@ -10,22 +12,28 @@ interface NewChatModalProps {
 }
 
 const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose }) => {
-    const { settings } = useUser();
+    const toast = useToast()
     const createNewChat = useChatStore(state => state.createNewChat);
 
     const [title, setTitle] = useState('');
-    const [model, setModel] = useState(settings.defaultModel);
-    const [systemPrompt, setSystemPrompt] = useState(settings.defaultSystemPrompt);
-    const [userPrompt, setUserPrompt] = useState(settings.defaultUserPrompt);
+    const [model, setModel] = useState('deepseek-v4-flash');
+    const [systemPrompt, setSystemPrompt] = useState('');
+    const [userPrompt, setUserPrompt] = useState('');
 
-    const handleCreate = () => {
-        createNewChat(title, model, systemPrompt, userPrompt);
+    const handleCreate = async () => {
+        
+        try{
+            await createNewChat(title, model, systemPrompt, userPrompt);
+            toast.success('创建成功');
+        }catch(err){
+            toast.error(err as string);
+        }
         onClose();
         // 重置表单
         setTitle('');
-        setModel(settings.defaultModel);
-        setSystemPrompt(settings.defaultSystemPrompt);
-        setUserPrompt(settings.defaultUserPrompt);
+        setModel('deepseek-v4-flash');
+        setSystemPrompt('');
+        setUserPrompt('');
     };
 
     if (!isOpen) return null;

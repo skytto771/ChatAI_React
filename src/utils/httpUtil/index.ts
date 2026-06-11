@@ -1,9 +1,8 @@
-import axios from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import { session } from '../sessionUtil'
 
 const baseUrl = import.meta.env.MODE === 'development' ? import.meta.env.VITE_DEVELOPMENT_API_URL : import.meta.env.VITE_PRODUCTION_API_URL;
-console.log('mode:', import.meta.env.MODE);
-console.log('baseUrl:', baseUrl);
+
 const http = axios.create({
     baseURL: baseUrl,
     timeout: 200000,
@@ -27,11 +26,15 @@ http.interceptors.request.use(
 
 http.interceptors.response.use(
     (response) => {
-        console.log('response:', response)
+        if(response.headers["Content-Type"] === 'text/event-stream'){
+            return response.data;
+        }
         if(response.data.code === 0) return response.data;
     },
     (error) => {
-        console.log('error:', error.response)
+        if(!error.response){
+            return Promise.reject('与服务器断开链接');
+        }
         const code = error.response.data.code;
         if(error.response.data.message) return Promise.reject(error.response.data.message);
         let message = ''
@@ -79,4 +82,34 @@ http.interceptors.response.use(
     }
 );
 
-export { http }
+interface api { 
+    post: (url: string, data?: {}, config?: AxiosRequestConfig<{}> | undefined) => Promise<Response>;
+}
+
+const httpStream:api = {
+    post: async (url: string, data?: {} | undefined, config?: AxiosRequestConfig<{}> | undefined)=>{
+        return new Promise(async (resolve, reject)=>{
+            try{
+                const res = await fetch(baseUrl + url,{
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': session.getToken() || 'undefined'
+                    },
+                    body: JSON.stringify(data)
+                })
+                if(!res.headers.get('content-type')?.includes('event-stream')){
+                    throw new Error('接口返回数据格式错误')
+                }
+                resolve(res)
+            }catch(err){
+                console.log('err:', err)
+                reject(err)
+            }
+        })
+    },
+}
+
+
+
+export { http, httpStream }

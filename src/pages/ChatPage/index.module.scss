@@ -17,6 +17,8 @@
 
 .chatHeader {
     padding: 18px 24px;
+    box-sizing: border-box;
+    height: 60px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
