@@ -9,7 +9,7 @@ interface ModelBadgeProps {
 const ModelBadge: React.FC<ModelBadgeProps> = ({ model }) => {
     return (
         <span className={styles.modelBadge}>
-            {MODEL_DISPLAY_NAMES[model] || model}
+            {model || MODEL_DISPLAY_NAMES[model]}
         </span>
     );
 };

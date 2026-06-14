@@ -4,6 +4,7 @@ export interface Message {
     content: string;
     reasoning: string;
     tokensUsed: number;
+    status: 'completed' | 'generating';
 }
 
 export interface User {
@@ -30,13 +31,37 @@ export interface Chat {
 
 export type Theme = 'default' | 'aurora' | 'sunset' | 'frost';
 
-export interface UserSettings {
-    nickname: string;
-    soundEnabled: boolean;
-    autoScroll: boolean;
-    defaultModel: string;
-    defaultSystemPrompt: string;
-    defaultUserPrompt: string;
+export interface chatSettings{
+    model?: string;
+    title?: string;
+    systemPrompt?: string;
+    userPrompt?: string;
+
+    // 上下文配置
+    contextLimit?: number;
+    maxTokens?: number;
+    
+    // 思考模式配置
+    isThinking?: boolean;
+    thinkingMode?: "fast" | "balanced" | "deep";
+    
+    // 功能开关
+    enableWebSearch?: boolean;
+    enableCodeInterpreter?: boolean;
+    enableFileUpload?: boolean;
+    
+    // 模型参数
+    temperature?: number;
+    topP?: number;
+    frequencyPenalty?: number;
+    presencePenalty?: number;
+    
+    // 响应配置
+    responseFormat?: "text" | "json" | "markdown";
+    streamResponse?: boolean;
+    
+    // 安全配置
+    contentFilter?: "strict" | "moderate" | "loose";
 }
 
 export interface ChatState {

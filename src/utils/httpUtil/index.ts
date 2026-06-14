@@ -36,7 +36,7 @@ http.interceptors.response.use(
             return Promise.reject('与服务器断开链接');
         }
         const code = error.response.data.code;
-        if(error.response.data.message) return Promise.reject(error.response.data.message);
+        console.log('code:', code)
         let message = ''
         switch (code) {
             case 1000:
@@ -53,9 +53,11 @@ http.interceptors.response.use(
                 break;
             case 2001:
                 message = '令牌已过期';
+                session.delSession()
                 break;
             case 2002:
                 message = '无效的令牌';
+                session.delSession()
                 break;
             case 2003:
                 message = '权限不足';
@@ -78,7 +80,8 @@ http.interceptors.response.use(
             default:
                 message = '未知错误';
         }
-        return Promise.reject(message);
+        if(error.response.data.message) message = error.response.data.message
+        return Promise.reject({code,message});
     }
 );
 

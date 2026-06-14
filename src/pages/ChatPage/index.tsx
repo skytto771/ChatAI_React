@@ -6,11 +6,13 @@ import ChatMessage from '@/components/ChatMessage';
 import InputArea from '@/components/InputArea';
 import TypingIndicator from '@/components/TypingIndicator';
 import ModelBadge from '@/components/ModelBadge';
-import NewChatModal from '@/components/NewChatModal';
+import EditChatModal from '@/components/EditChatModal';
 import SettingsModal from '@/components/SettingsModal';
 import { session } from '@/utils'
 import styles from './index.module.scss';
 import { useNavigate } from 'react-router';
+import EmptyChat from '@/components/EmptyChat';
+import type { chatSettings } from '@/types';
 
 const Chat: React.FC = () => {
     const {
@@ -21,6 +23,8 @@ const Chat: React.FC = () => {
         loadCurMessages,
         addMessage,
         generateAiReply,
+        createNewChat,
+        resume,
         setActiveChatId,
         setIsResponding,
         deleteChat,
@@ -31,10 +35,10 @@ const Chat: React.FC = () => {
     const navigate = useNavigate();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+    const [isEditChatModalOpen, setIsEditChatModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-    const activeChat = chats.find(c => c.id === activeChatId);
+    const activeChat = chats.length > 0 ? chats.find(c => c.id === activeChatId) : null;
     const messages = activeChat?.messages || [];
     const activeChatLastMessage = messages[messages.length - 1]
 
@@ -54,7 +58,12 @@ const Chat: React.FC = () => {
     // 加载聊天数据
     useEffect(() => {
         if (activeChatId) {
-            loadCurMessages(activeChatId).catch(err=>{
+            loadCurMessages(activeChatId).then(res=>{
+                if(res.status === 'generating'){
+                    setIsResponding(true)
+                    resume(activeChatId,res.messageId!)
+                }
+            }).catch(err=>{
                 toast.error(err);
             })
         }
@@ -75,36 +84,38 @@ const Chat: React.FC = () => {
         if (!container) return;
         
         const threshold = 120;
-        
         // 恢复滚动位置（初始化）
         const scrollPositions = JSON.parse(localStorage.getItem('conversations_scrollTop') || '{}');
         const savedScrollTop = scrollPositions[activeChatId];
         if (savedScrollTop !== undefined && !isResponding) {
-            if(savedScrollTop !== 0){
-                // 等待 DOM 完全渲染
-                const waitForStableHeight = () => {
-                    const currentHeight = container.scrollHeight;
-                    requestAnimationFrame(() => {
-                        const newHeight = container.scrollHeight;
-                        if (newHeight === currentHeight) {
-                            // 高度稳定了，执行滚动
-                            container.scrollTo({
-                                top: savedScrollTop,
-                                behavior: 'smooth'
-                            });
-                            if(savedScrollTop <= newHeight){
-                                isInitialMountRef.current = false
-                            }
-                        } else {
-                            // 高度还在变化，重试
-                            waitForStableHeight();
+            // 等待 DOM 完全渲染
+            const waitForStableHeight = () => {
+                const currentHeight = container.scrollHeight;
+                requestAnimationFrame(() => {
+                    const newHeight = container.scrollHeight;
+                    if (newHeight === currentHeight) {
+                        // 高度稳定了，执行滚动
+                        container.scrollTo({
+                            top: savedScrollTop,
+                            behavior: 'smooth'
+                        });
+                        if(savedScrollTop <= newHeight){
+                            isInitialMountRef.current = false
                         }
-                    });
-                };
-                waitForStableHeight();
+                    } else {
+                        // 高度还在变化，重试
+                        waitForStableHeight();
+                    }
+                });
+            };
+            waitForStableHeight();
+        }
+        if(messages.length === 0 || isResponding){
+            isInitialMountRef.current = false
+            if(isResponding){
+                scrollToBottom()
             }
         }
-        
         const handleScroll = () => {
             const { scrollTop, scrollHeight, clientHeight } = container;
             isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < threshold;
@@ -117,18 +128,35 @@ const Chat: React.FC = () => {
         };
 
         if (isResponding && isNearBottomRef.current && !isInitialMountRef.current) {
-            container.scrollTo({
-                top: container.scrollHeight,
-                behavior: 'auto' // 流式响应中用 auto，不要用 smooth
-            });
+            scrollToBottom()
         }
         
         container.addEventListener('scroll', handleScroll);
-        
         return () => {
             container.removeEventListener('scroll', handleScroll);
         };
     }, [activeChatId, isResponding, messages.length,activeChatLastMessage?.content]);
+    function scrollToBottom() {
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'auto'
+            });
+        }
+    }
+
+    const handleQuickCreate = async ({model,isThinking}: chatSettings) => {
+        if (isResponding) {
+            toast.warning('请等待当前回复完成后再创建对话');
+            return;
+        }
+        // 调用 store 的快速创建方法（假设有一个默认创建）
+        const newChatId = await createNewChat({title:'新对话',model,isThinking});
+        // 可选：添加一条欢迎消息
+        setActiveChatId(newChatId);
+        toast.success('对话已创建');
+    };
 
     const handleAIResponse = useCallback(
         async (chatId: string) => {
@@ -150,6 +178,7 @@ const Chat: React.FC = () => {
             try{
                 setIsResponding(true);
                 await addMessage(activeChatId, 'user', text, 0);
+                scrollToBottom()
                 await handleAIResponse(activeChatId);
             }catch(error){
                 toast.error(error as string)
@@ -157,16 +186,6 @@ const Chat: React.FC = () => {
         },
         [activeChatId, isResponding]
     );
-
-    // 新建对话按钮
-    const handleNewChat = () => {
-        if (isResponding) {
-            toast.warning('请等待当前回复完成后再新建对话');
-            return;
-        }
-        setIsNewChatModalOpen(true);
-        setIsSidebarOpen(false);
-    };
 
     // 删除对话
     const handleDeleteChat = async (chatId: string) => {
@@ -205,7 +224,7 @@ const Chat: React.FC = () => {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                setIsNewChatModalOpen(false);
+                setIsEditChatModalOpen(false);
                 setIsSettingsModalOpen(false);
             }
             if ((e.ctrlKey || e.metaKey) && e.key === ',') {
@@ -228,11 +247,12 @@ const Chat: React.FC = () => {
             <ChatSidebar
                 chats={chats}
                 activeChatId={activeChatId}
-                onNewChat={handleNewChat}
+                onNewChat={()=>handleSelectChat('')}
                 onSelectChat={handleSelectChat}
                 onDeleteChat={handleDeleteChat}
                 onRenameChat={updateChatTitle}
                 onOpenSettings={() => setIsSettingsModalOpen(true)}
+                onOpenChatSettings={() => setIsEditChatModalOpen(true)}
                 onLogout={handleLogout}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
@@ -244,22 +264,27 @@ const Chat: React.FC = () => {
                     {activeChat && <ModelBadge model={activeChat.model} />}
                     <span className={styles.statusBadge}>● 在线</span>
                 </div>
-                <div className={styles.messagesContainer} ref={messagesContainerRef}>
-                    {messages.map((message) => (
-                        <ChatMessage key={message.id} role={message.role} text={message.content} />
-                    ))}
-                    {isResponding && (
-                        <div className={`${styles.message} ${styles.ai}`}>
-                            <div className={styles.avatar}>🤖</div>
-                            <div className={styles.bubble}>
-                                <TypingIndicator />
+                {!activeChatId?<EmptyChat
+                    onStartChat={handleQuickCreate}
+                />:
+                <>
+                    <div className={styles.messagesContainer} ref={messagesContainerRef}>
+                        {messages.map((message) => (
+                            <ChatMessage key={message.id} role={message.role} text={message.content} />
+                        ))}
+                        {isResponding && (
+                            <div className={`${styles.message} ${styles.ai}`}>
+                                <div className={styles.avatar}>🤖</div>
+                                <div className={styles.bubble}>
+                                    <TypingIndicator />
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
-                <InputArea onSend={handleSendMessage} disabled={isResponding} />
+                        )}
+                    </div>
+                    <InputArea onSend={handleSendMessage} disabled={isResponding} />
+                </>}
             </div>
-            <NewChatModal isOpen={isNewChatModalOpen} onClose={() => setIsNewChatModalOpen(false)} />
+            <EditChatModal handelEditChatModel={async()=>''} isOpen={isEditChatModalOpen} onClose={() => setIsEditChatModalOpen(false)} />
             <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
         </div>
     );

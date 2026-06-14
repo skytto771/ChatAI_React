@@ -1,44 +1,18 @@
 import { create } from 'zustand';
-import type { Chat, ChatState, Message } from '@/types';
+import type { Chat, ChatState, Message, chatSettings } from '@/types';
 import { devtools } from 'zustand/middleware';
 import { http, marked } from '@/utils';
 import api from '@/api';
 import { httpStream } from '@/utils/httpUtil';
 
-interface chatSettings{
-    // 上下文配置
-    contextLimit?: number;
-    maxTokens?: number;
-    
-    // 思考模式配置
-    thinkingMode?: "fast" | "balanced" | "deep";
-    
-    // 功能开关
-    enableWebSearch?: boolean;
-    enableCodeInterpreter?: boolean;
-    enableFileUpload?: boolean;
-    
-    // 模型参数
-    temperature?: number;
-    topP?: number;
-    frequencyPenalty?: number;
-    presencePenalty?: number;
-    
-    // 响应配置
-    responseFormat?: "text" | "json" | "markdown";
-    streamResponse?: boolean;
-    
-    // 安全配置
-    contentFilter?: "strict" | "moderate" | "loose";
-}
-
 interface ChatStore extends ChatState {
     settings: chatSettings;
     loadChats: () => Promise<void>;
-    loadCurMessages: (chatId: string) => Promise<void>;
+    loadCurMessages: (chatId: string) => Promise<{status: 'generating' | 'completed',messageId?:string}>;
     addMessage: (chatId: string, role: 'user' | 'assistant', text: string, tokensUsed?:number) => Promise<void>;
     generateAiReply: (chatId: string, readFn: void) => Promise<void>;
-    createNewChat: (title: string, model: string, systemPrompt: string, userPrompt: string) => Promise<void>;
+    resume: (chatId: string,messageId:string) => Promise<void>;
+    createNewChat: (config:chatSettings) => Promise<string>;
     updateChatTitle: (chatId: string, title: string) => Promise<void>;
     updateChatModel: (chatId: string, model: string) => void;
     updateChatSystemPrompt: (chatId: string, systemPrompt: string) => void;
@@ -59,13 +33,19 @@ export const useChatStore = create<ChatStore>(
 
         loadChats: async () => {
             return new Promise(async (resolve, reject) => { 
-                const actConversation = localStorage.getItem('activeConversationId')
-
+                const actConversationId = localStorage.getItem('activeConversationId') || ''
+                let hasId = false
+                
                 try{
                     const res = await http.post(api.conversation.getConversationList,{})
                     const resd = res.data
-                    const chats = resd.rows
-                    set({ chats, activeChatId: actConversation || chats[0]?.id  });
+                    const chats = resd.rows.map((c:any)=>{
+                        if(c.id === actConversationId){
+                            hasId = true
+                        }
+                        return c
+                    })
+                    set({ chats, activeChatId: hasId ? actConversationId : ''  });
                     resolve()
                 }catch(err){
                     reject(err)
@@ -79,20 +59,29 @@ export const useChatStore = create<ChatStore>(
                     const res = await http.post(api.message.getMessageList,{conversationId:chatId})
                     const resD = res.data
                     set(((state)=>{
+                        let isGenerating = false
                         const updatedChats = state.chats.map(chat=>{
                             if(chat.id === chatId){
                                 chat.messages = resD.rows.map((message:any)=>{
+                                    let origenalContent = '' 
                                     if(message.role === 'assistant'){
-                                        message.content = marked.parse(message.content)
+                                        origenalContent = message.content
+                                        message.content = marked.parse(message.content,{async: false})
+                                    }
+                                    if(message.status === 'generating'){
+                                        isGenerating = true
+                                        resolve({status:'generating',messageId:message.id})
                                     }
                                     return message
                                 })
                             }
                             return chat
                         })
+                        if(!isGenerating){
+                            resolve({status:'completed'})
+                        }
                         return {chats:updatedChats}
                     }))
-                    resolve()
                 }catch(err){
                     reject(err)
                 }
@@ -135,54 +124,64 @@ export const useChatStore = create<ChatStore>(
                     const reader = res.body!.getReader();
                     const decoder = new TextDecoder();
                     let contentBuffer = '';
+                    let contentMd = ''
                     let reasoningBuffer = '';
+                    let parseSchedule = false
                     while (true) { 
                         const { done, value } = await reader.read();
                         if (done) {
                             resolve();
                             break;
                         }
+
                         const chunkMsg = decoder.decode(value);
                         const messagesJSON = chunkMsg.split('\n\n').filter(chunk => chunk.trim() !== '');
+
                         messagesJSON.forEach(chunk => {
                             const messageChunk = JSON.parse(chunk)
                             if(messageChunk.type === 'reasoning_content'){
-                                setMessage(messageChunk.messageId,messageChunk.type)
+                                reasoningBuffer += messageChunk.content
+                                setMessage(messageChunk.messageId,messageChunk.type,reasoningBuffer)
                             }else{
                                 contentBuffer += messageChunk.content
-                                setMessage(messageChunk.messageId,messageChunk.type)
+                                contentMd = contentMd + messageChunk.content
+                                if(!parseSchedule){
+                                    parseSchedule = true
+                                    setTimeout(()=>{
+                                        contentMd = marked.parse(contentBuffer,{async: false})
+                                        parseSchedule = false
+                                    },500)
+                                }
+                                setMessage(messageChunk.messageId,messageChunk.type,contentMd)
                             }
                         });
                     }
-                    function setMessage(id:string,type:string){
+                    function setMessage(id:string,type:string,displayContent: string){
                         set((state)=>{
                             const chats = state.chats.map(c=>{
                                 if(c.id===chatId){
                                     const message = c.messages.find(m=>m.id === id)
                                     if(message){
-                                        if(type === 'reasoning_content'){
-                                            message.reasoning = reasoningBuffer
-                                        }else{
-                                            message.content = marked.parse(contentBuffer,{async: false})
+                                        switch(type){ 
+                                            case 'reasoning_content':
+                                                message.reasoning = displayContent
+                                                break
+                                            case 'content':
+                                                message.content = displayContent
+                                                break
+                                            case 'finished':
+                                                message.status = 'completed'
+                                                break
                                         }
                                     }else{
-                                        if(type === 'reasoning_content'){
-                                            c.messages.push({
-                                                role: 'assistant',
-                                                content: '',
-                                                reasoning: reasoningBuffer,
-                                                id: id,
-                                                tokensUsed: 0,
-                                            })
-                                        }else{
-                                            c.messages.push({
-                                                role: 'assistant',
-                                                content: marked.parse(contentBuffer,{async: false}),
-                                                reasoning: '',
-                                                id: id,
-                                                tokensUsed: 0,
-                                            })
-                                        }
+                                        c.messages.push({
+                                            role: 'assistant',
+                                            content: type === 'content' ? contentMd : '',
+                                            reasoning: type === 'reasoning_content' ? reasoningBuffer : '',
+                                            id: id,
+                                            tokensUsed: 0,
+                                            status: 'generating',
+                                        });
                                     }
                                 }
                                 return c
@@ -194,18 +193,91 @@ export const useChatStore = create<ChatStore>(
                 }catch(err){reject(err)}
             })
         },
+        resume: async (chatId,messageId)=>{
+            return new Promise(async (resolve,reject)=>{
+                try{
+                    const res = await httpStream.post(api.message.resumeReply, { messageId })
+                    const reader = res.body!.getReader();
+                    const decoder = new TextDecoder();
+                    let contentBuffer = '';
+                    let contentMd = ''
+                    let reasoningBuffer = '';
+                    let parseSchedule = false
+                    while (true) { 
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            resolve();
+                            break;
+                        }
+                        const chunkMsg = decoder.decode(value);
+                        const messagesJSON = chunkMsg.split('\n\n');
 
-        createNewChat: (title, model, systemPrompt, userPrompt) => {
+                        messagesJSON.forEach(chunk => {
+                            const messageChunk = JSON.parse(chunk)
+                            if(messageChunk.type === 'reasoning_content'){
+                                reasoningBuffer += messageChunk.content
+                                setMessage(messageChunk.messageId,messageChunk.type,reasoningBuffer)
+                            }else{
+                                contentBuffer += messageChunk.content
+                                contentMd = contentMd + messageChunk.content
+                                if(!parseSchedule){
+                                    parseSchedule = true
+                                    setTimeout(()=>{
+                                        contentMd = marked.parse(contentBuffer,{async: false})
+                                        parseSchedule = false
+                                    },500)
+                                }
+                                setMessage(messageChunk.messageId,messageChunk.type,contentMd)
+                            }
+                        });
+                    }
+                    function setMessage(id:string,type:string,displayContent: string){
+                        set((state)=>{
+                            const chats = state.chats.map(c=>{
+                                if(c.id===chatId){
+                                    const message = c.messages.find(m=>m.id === id)
+                                    if(message){
+                                        switch(type){ 
+                                            case 'reasoning_content':
+                                                message.reasoning = displayContent
+                                                break
+                                            case 'content':
+                                                message.content = displayContent
+                                                break
+                                            case 'finished':
+                                                message.status = 'completed'
+                                                break
+                                        }
+                                    }else{
+                                        c.messages.push({
+                                            role: 'assistant',
+                                            content: type === 'content' ? contentMd : '',
+                                            reasoning: type === 'reasoning_content' ? reasoningBuffer : '',
+                                            id: id,
+                                            tokensUsed: 0,
+                                            status: 'generating',
+                                        });
+                                    }
+                                }
+                                return c
+                            })
+                            return {chats}
+                        })
+                    }
+                }catch(err){reject(err)}
+            })
+        },
+
+        createNewChat: ({title, model, isThinking}) => {
             return new Promise(async(resolve,reject)=> { 
                 try{
-                    const res = await http.post(api.conversation.addConversation, { title, model, systemPrompt, userPrompt })
+                    const res = await http.post(api.conversation.addConversation, { title, model, isThinking })
                     const resD = res.data
                     set((state) => {
                         const newChats = [resD, ...state.chats];
-                        localStorage.setItem('ai-chats', JSON.stringify(newChats));
                         return { chats: newChats, activeChatId: resD.id };
                     });
-                    resolve();
+                    resolve(resD.id);
                 }catch(err){
                     reject(err);
                 }

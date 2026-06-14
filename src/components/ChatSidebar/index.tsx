@@ -11,6 +11,7 @@ interface ChatSidebarProps {
     onNewChat: () => void;
     onSelectChat: (chatId: string) => void;
     onOpenSettings: () => void;
+    onOpenChatSettings: () => void;
     onLogout: () => void;
     onDeleteChat: (chatId: string) => Promise<void>;
     isOpen: boolean;
@@ -24,6 +25,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     onNewChat,
     onSelectChat,
     onOpenSettings,
+    onOpenChatSettings,
     onRenameChat,
     onLogout,
     onDeleteChat,
@@ -157,7 +159,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                         <div className={styles.chatTitle}>{chat.title}</div>
                                         <div className={styles.chatDate}>{formatDate(chat.updatedAt)}</div>
                                     </div>
-                                    <span className={styles.modelTag}>{MODEL_DISPLAY_NAMES[chat.model] || chat.model}</span>
+                                    <span className={styles.modelTag}>{chat.model || MODEL_DISPLAY_NAMES[chat.model]}</span>
                                     <button
                                         className={styles.chatActionBtn}
                                         onClick={(e) => toggleChatMenu(e, chat.id)}
@@ -174,6 +176,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                         onClick={(e) => handleStartRename(e, chat)}
                                     >
                                         <span className={styles.menuIcon}>✏️</span> 重命名
+                                    </button>
+                                    <button
+                                        className={styles.chatPopupItem}
+                                        onClick={onOpenChatSettings}
+                                    >
+                                        <span className={styles.menuIcon}>⚙️</span> 设置
                                     </button>
                                     <button
                                         className={`${styles.chatPopupItem} ${styles.danger}`}
