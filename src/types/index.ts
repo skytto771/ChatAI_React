@@ -24,6 +24,7 @@ export interface Chat {
     id: string;
     title: string;
     messages: Message[];
+    settings: chatSettings;
     model: string;           // 模型标识，如 'gpt-3.5-turbo'
     createdAt: number;
     updatedAt: number;
@@ -53,8 +54,8 @@ export interface chatSettings{
     // 模型参数
     temperature?: number;
     topP?: number;
-    frequencyPenalty?: number;
-    presencePenalty?: number;
+    logprobs?: boolean;
+    topLogprobs?: number;
     
     // 响应配置
     responseFormat?: "text" | "json" | "markdown";

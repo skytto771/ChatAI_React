@@ -68,3 +68,76 @@
         transform: translateY(0);
     }
 }
+
+
+.thinkingMessage {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    font-style: italic;
+    word-break: break-word;
+    white-space: pre-wrap;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+    /* 头部提示文字（“思考过程”标签） */
+    &::before {
+        content: "💭 思考过程";
+        display: block;
+        font-style: normal;
+        font-weight: 600;
+        font-size: 0.72rem;
+        color: var(--accent);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        opacity: 0.85;
+    }
+    
+    /* ---- 流式输出（正在思考中） ---- */
+    &.streaming {
+        animation: thinkingPulse 1.6s ease-in-out infinite;
+    }
+    
+    @keyframes thinkingPulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+    
+    /* ---- 长思考折叠（可选） ---- */
+    &.collapsible {
+        max-height: 160px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: max-height 0.4s ease;
+    }
+    
+    &.collapsible::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: linear-gradient(transparent, var(--surface) 80%);
+        pointer-events: none;
+    }
+    
+    &.collapsible:hover::after {
+        background: linear-gradient(transparent, var(--accent-glow) 80%);
+    }
+    
+    &.expanded {
+        max-height: none;
+    }
+    
+    &.expanded::after {
+        display: none;
+    }
+}

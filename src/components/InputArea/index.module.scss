@@ -7,6 +7,7 @@
 
 .inputWrapper {
     display: flex;
+    flex-direction: column;
     gap: 12px;
     align-items: flex-end;
     background: var(--input-bg);
@@ -21,7 +22,7 @@
     }
 
     textarea {
-        flex: 1;
+        width: 100%;
         background: transparent;
         border: none;
         color: var(--text-primary);
@@ -41,36 +42,83 @@
         &:disabled {
             opacity: 0.5;
         }
+
+        /* 自定义滚动条（当高度达到上限时） */
+        &::-webkit-scrollbar {
+            width: 4px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: var(--scrollbar);
+            border-radius: 4px;
+        }
     }
 }
 
-.sendBtn {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    cursor: pointer;
+.sendBtnWrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px var(--accent-glow);
-    flex-shrink: 0;
+    justify-content: space-between;   /* 修正拼写错误 */
+    width: 100%;
 
-    svg{
-        transform: translate(-1px,1px);
+    .sections {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        div {
+            padding: 4px 14px;
+            border-radius: 999px;
+            background: var(--hover);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid transparent;
+            transition: all 0.25s ease;
+
+            &:hover {
+                background: var(--accent-glow);
+                color: var(--accent);
+                border-color: var(--accent);
+                opacity: 1;
+            }
+
+            &.active {
+                background: var(--accent-glow);
+                color: var(--accent);
+                border-color: var(--accent);
+                opacity: 1;
+            }
+        }
     }
 
-    &:hover {
-        filter: brightness(1.2);
-        transform: scale(1.04);
-    }
+    .sendBtn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
 
-    &:disabled {
-        opacity: 0.4;
-        pointer-events: none;
-        box-shadow: none;
+        svg {
+            transform: translate(-1px, 1px);
+        }
+
+        &:hover {
+            filter: brightness(1.2);
+            transform: scale(1.04);
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            box-shadow: none;
+        }
     }
 }

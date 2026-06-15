@@ -53,17 +53,23 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled }) => {
                     placeholder="输入消息... (Enter 发送)"
                     disabled={disabled}
                 />
-                <button
-                    className={styles.sendBtn}
-                    onClick={handleSend}
-                    disabled={disabled}
-                    title="发送消息"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                        <path d="M22 2L11 13" />
-                        <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                    </svg>
-                </button>
+                <div className={styles.sendBtnWrapper}>
+                    <div className={styles.sections}>
+                        <div>深度思考</div>
+                        <div>联网搜索</div>
+                    </div>
+                    <button
+                        className={styles.sendBtn}
+                        onClick={handleSend}
+                        disabled={disabled}
+                        title="发送消息"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                            <path d="M22 2L11 13" />
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     );

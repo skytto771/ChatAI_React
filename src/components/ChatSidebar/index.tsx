@@ -11,7 +11,7 @@ interface ChatSidebarProps {
     onNewChat: () => void;
     onSelectChat: (chatId: string) => void;
     onOpenSettings: () => void;
-    onOpenChatSettings: () => void;
+    onOpenChatSettings: (chatId:string) => void;
     onLogout: () => void;
     onDeleteChat: (chatId: string) => Promise<void>;
     isOpen: boolean;
@@ -156,10 +156,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                 >
                                     <span className={styles.dot}></span>
                                     <div className={styles.chatInfo}>
-                                        <div className={styles.chatTitle}>{chat.title}</div>
+                                        <div className={styles.chatTitle} title={chat.title}>{chat.title}</div>
                                         <div className={styles.chatDate}>{formatDate(chat.updatedAt)}</div>
                                     </div>
-                                    <span className={styles.modelTag}>{chat.model || MODEL_DISPLAY_NAMES[chat.model]}</span>
+                                    <span className={styles.modelTag} title={chat.model}>{chat.model || MODEL_DISPLAY_NAMES[chat.model]}</span>
                                     <button
                                         className={styles.chatActionBtn}
                                         onClick={(e) => toggleChatMenu(e, chat.id)}
@@ -179,7 +179,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                     </button>
                                     <button
                                         className={styles.chatPopupItem}
-                                        onClick={onOpenChatSettings}
+                                        onClick={()=>onOpenChatSettings(chat.id)}
                                     >
                                         <span className={styles.menuIcon}>⚙️</span> 设置
                                     </button>

@@ -36,6 +36,8 @@ const api = {
     modelSettings:{
         getSettings: '/modelSettings/getSettings',
         updateSettings: '/modelSettings/updateSettings',
+        getConversationSettings: '/modelSettings/getConversationSettings',
+        updateConversationSettings: '/modelSettings/updateConversationSettings',
     }
 }
 

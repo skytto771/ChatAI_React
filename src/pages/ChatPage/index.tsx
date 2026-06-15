@@ -29,6 +29,8 @@ const Chat: React.FC = () => {
         setIsResponding,
         deleteChat,
         updateChatTitle,
+        getChatModelSettings,
+        updateChatModelSettings,
         loadModelSettings
     } = useChatStore();
     const toast = useToast()
@@ -37,6 +39,7 @@ const Chat: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEditChatModalOpen, setIsEditChatModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [selectChat, setSelectChat] = useState<any>(null);
 
     const activeChat = chats.length > 0 ? chats.find(c => c.id === activeChatId) : null;
     const messages = activeChat?.messages || [];
@@ -135,13 +138,13 @@ const Chat: React.FC = () => {
         return () => {
             container.removeEventListener('scroll', handleScroll);
         };
-    }, [activeChatId, isResponding, messages.length,activeChatLastMessage?.content]);
+    }, [activeChatId, isResponding, messages.length,activeChatLastMessage?.content,activeChatLastMessage?.reasoning]);
     function scrollToBottom() {
         const container = messagesContainerRef.current;
         if (container) {
             container.scrollTo({
                 top: container.scrollHeight,
-                behavior: 'auto'
+                behavior: 'instant'
             });
         }
     }
@@ -220,6 +223,12 @@ const Chat: React.FC = () => {
         navigate('/login');
     };
 
+    const openChatSettings = async (chatId: string)=>{
+        const resDate = await getChatModelSettings(chatId)
+        setSelectChat({ conversationId: chatId,...resDate })
+        setIsEditChatModalOpen(true)
+    }
+
     // 快捷键
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -252,7 +261,7 @@ const Chat: React.FC = () => {
                 onDeleteChat={handleDeleteChat}
                 onRenameChat={updateChatTitle}
                 onOpenSettings={() => setIsSettingsModalOpen(true)}
-                onOpenChatSettings={() => setIsEditChatModalOpen(true)}
+                onOpenChatSettings={openChatSettings}
                 onLogout={handleLogout}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
@@ -270,7 +279,7 @@ const Chat: React.FC = () => {
                 <>
                     <div className={styles.messagesContainer} ref={messagesContainerRef}>
                         {messages.map((message) => (
-                            <ChatMessage key={message.id} role={message.role} text={message.content} />
+                            <ChatMessage key={message.id} role={message.role} text={message.content} reasoning={message.reasoning} isResponse={activeChatLastMessage?.id === message.id && isResponding} />
                         ))}
                         {isResponding && (
                             <div className={`${styles.message} ${styles.ai}`}>
@@ -284,7 +293,7 @@ const Chat: React.FC = () => {
                     <InputArea onSend={handleSendMessage} disabled={isResponding} />
                 </>}
             </div>
-            <EditChatModal handelEditChatModel={async()=>''} isOpen={isEditChatModalOpen} onClose={() => setIsEditChatModalOpen(false)} />
+            <EditChatModal selectChat={selectChat} handelEditChatModel={updateChatModelSettings} isOpen={isEditChatModalOpen} onClose={() => setIsEditChatModalOpen(false)} />
             <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
         </div>
     );
