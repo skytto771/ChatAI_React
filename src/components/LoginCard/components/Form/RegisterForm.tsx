@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from './index.module.scss';
-import { isValidEmail } from '@/utils/validators';
-import { http } from '@/utils/httpUtil'
+import { isValidEmail } from '@/utils';
+import { http } from '@/utils'
 import api from '@/api'
 
 interface RegisterFormProps {

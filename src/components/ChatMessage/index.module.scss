@@ -1,3 +1,5 @@
+// 在原有样式基础上添加
+
 .message {
     display: flex;
     gap: 12px;
@@ -14,12 +16,22 @@
             border-bottom-left-radius: 18px;
             border-color: rgba(255, 255, 255, 0.08);
         }
+
+        // 用户消息的工具栏在右侧
+        .toolbar {
+            justify-content: flex-end;
+        }
     }
 
     &.assistant {
         .avatar {
             background: linear-gradient(135deg, var(--accent), var(--accent-light));
             color: #fff;
+        }
+
+        // 助手消息的工具栏在左侧
+        .toolbar {
+            justify-content: flex-start;
         }
     }
 }
@@ -37,8 +49,18 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.bubbleWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 100%;
+    flex: 1;
+}
+
 .bubble {
     background: var(--bubble-ai);
+    max-width: 666px;
+    width: 100%;
     padding: 12px 16px;
     border-radius: 18px;
     border-bottom-left-radius: 4px;
@@ -48,9 +70,15 @@
     border: 1px solid rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(4px);
     word-break: break-word;
+
+    // 用户消息气泡
+    .user & {
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 4px;
+    }
 }
 
-.messageText{
+.messageText {
     box-sizing: border-box;
     white-space: pre-wrap;
     word-break: break-word;
@@ -58,18 +86,110 @@
     position: relative;
 }
 
-@keyframes msgFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(14px);
-    }
-    to {
+// ========== 工具栏样式 ==========
+.toolbar {
+    display: flex;
+    gap: 4px;
+    padding: 2px 4px;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+    flex-wrap: wrap;
+
+    // 鼠标悬停时显示工具栏
+    .bubbleWrapper:hover & {
         opacity: 1;
-        transform: translateY(0);
+    }
+
+    // 编辑状态下始终显示
+    .bubbleWrapper:has(.editing) &,
+    .bubbleWrapper:has(.cancelBtn) & {
+        opacity: 1;
     }
 }
 
+.toolbarBtn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
 
+    &:hover {
+        background: var(--surface-hover);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0px);
+    }
+
+    .btnIcon {
+        font-size: 0.85rem;
+        line-height: 1;
+    }
+
+    .btnLabel {
+        font-weight: 500;
+        letter-spacing: 0.02em;
+    }
+
+    // 复制成功状态
+    &.copied {
+        color: var(--success, #52c41a);
+        background: rgba(82, 196, 26, 0.1);
+    }
+
+    // 编辑状态
+    &.editing {
+        color: var(--accent);
+        background: rgba(var(--accent-rgb, 64, 169, 255), 0.1);
+    }
+
+    // 取消按钮
+    &.cancelBtn {
+        color: var(--error, #ff4d4f);
+        
+        &:hover {
+            background: rgba(255, 77, 79, 0.1);
+        }
+    }
+}
+
+// ========== 编辑文本框 ==========
+.editTextarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+        outline: none;
+        border-color: var(--accent-light);
+        box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 64, 169, 255), 0.2);
+    }
+
+    &::placeholder {
+        color: var(--text-disabled);
+    }
+}
+
+// ========== 思考过程样式更新 ==========
 .thinkingMessage {
     position: relative;
     margin-bottom: 10px;
@@ -86,7 +206,7 @@
     white-space: pre-wrap;
     backdrop-filter: blur(4px);
     transition: all 0.3s ease;
-    /* 头部提示文字（“思考过程”标签） */
+
     &::before {
         content: "💭 思考过程";
         display: block;
@@ -99,25 +219,24 @@
         margin-bottom: 8px;
         opacity: 0.85;
     }
-    
-    /* ---- 流式输出（正在思考中） ---- */
+
     &.streaming {
         animation: thinkingPulse 1.6s ease-in-out infinite;
     }
-    
+
     @keyframes thinkingPulse {
         0%, 100% { opacity: 0.6; }
         50% { opacity: 1; }
     }
-    
-    /* ---- 长思考折叠（可选） ---- */
+
+    // 长思考折叠（可选）
     &.collapsible {
         max-height: 160px;
         overflow: hidden;
         cursor: pointer;
         transition: max-height 0.4s ease;
     }
-    
+
     &.collapsible::after {
         content: "";
         position: absolute;
@@ -128,16 +247,28 @@
         background: linear-gradient(transparent, var(--surface) 80%);
         pointer-events: none;
     }
-    
+
     &.collapsible:hover::after {
         background: linear-gradient(transparent, var(--accent-glow) 80%);
     }
-    
+
     &.expanded {
         max-height: none;
     }
-    
+
     &.expanded::after {
         display: none;
+    }
+}
+
+// ========== 动画 ==========
+@keyframes msgFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

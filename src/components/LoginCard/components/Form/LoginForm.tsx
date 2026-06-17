@@ -62,7 +62,7 @@ const LoginForm = ({ onSuccess, onError, onShake }: LoginFormProps) => {
                 const currentDate = new Date();
                 const loginDateObj = new Date(loginDate);
                 const timeDifference = currentDate.getTime() - loginDateObj.getTime();
-                console.log(timeDifference,expireTime)
+                
                 if (timeDifference > expireTime) {
                     localStorage.removeItem('chatAi_LoginAccount');
                 }else{

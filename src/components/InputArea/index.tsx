@@ -1,15 +1,22 @@
 import React, { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import type { chatSettings, Chat } from '@/types'
 import styles from './index.module.scss';
 
-interface InputAreaProps {
-    onSend: (message: string) => void;
-    disabled: boolean;
+
+interface updateSettings extends chatSettings { 
+    conversationId: string;
 }
 
-const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled }) => {
+interface InputAreaProps {
+    onUpdateSetting: (settings: updateSettings) => Promise<string>;
+    onSend: (message: string) => void;
+    disabled: boolean;
+    chat: Chat | null;
+}
+
+const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled,chat,onUpdateSetting }) => {
     const [inputValue, setInputValue] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
     const handleSend = () => {
         const text = inputValue.trim();
         if (text === '' || disabled) return;
@@ -34,6 +41,13 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled }) => {
         }
     };
 
+    function disableF(){
+        if(!chat) return
+        if(chat.model.includes('deepseek')){
+            return true
+        }
+    }
+
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
@@ -54,10 +68,15 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, disabled }) => {
                     disabled={disabled}
                 />
                 <div className={styles.sendBtnWrapper}>
-                    <div className={styles.sections}>
-                        <div>深度思考</div>
-                        <div>联网搜索</div>
-                    </div>
+                    {chat&&<div className={styles.sections}>
+                        {chat.settings&&
+                            <>
+                                {!disableF()&&<div>深度思考</div>}
+                                {!disableF()&&<div>联网搜索</div>}
+                                <div className={`${chat.settings.isThinking && styles.active}`} onClick={()=>onUpdateSetting({conversationId:chat.id,isThinking:!chat.settings.isThinking})}>深度思考</div>
+                            </>
+                        }
+                    </div>}
                     <button
                         className={styles.sendBtn}
                         onClick={handleSend}

@@ -22,7 +22,7 @@ const editChatModal: React.FC<EditChatModalProps> = ({ isOpen, onClose, handelEd
     // 思考模式
     const [settingsForm, setSettingsForm] = useState<chatSettings>({
         title: '',
-        model: AVAILABLE_MODELS[0]?.value,
+        model: AVAILABLE_MODELS[0].value,
         systemPrompt: '',
         userPrompt: '',
         contextLimit: 4096,
@@ -119,6 +119,9 @@ const editChatModal: React.FC<EditChatModalProps> = ({ isOpen, onClose, handelEd
             const formVal = Object.keys(settingsForm)
             if(formVal.includes(key)){
                 onChangeV(key as keyof chatSettings,Object.values(selectChat)[index])
+                if(key === 'model'){
+                    onChangeV(key as keyof chatSettings,Object.values(selectChat)[index]||AVAILABLE_MODELS[0].value)
+                }
             }
         });
     }, [selectChat]);
@@ -133,10 +136,17 @@ const editChatModal: React.FC<EditChatModalProps> = ({ isOpen, onClose, handelEd
         }
     };
 
+    function disableF(){
+        const model = settingsForm.model!
+        if(model.includes('deepseek')){
+            return true
+        }
+    }
+
     if (!isOpen) return null;
 
     return (
-        <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modalOverlay}>
             <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
                     <h3>✨ 对话模型设置</h3>
@@ -254,14 +264,14 @@ const editChatModal: React.FC<EditChatModalProps> = ({ isOpen, onClose, handelEd
                     <div className={styles.formSection}>
                         <div className={styles.sectionTitle}>🔌 扩展功能</div>
                         <div className={styles.checkboxGroup}>
-                            <label className={styles.checkboxLabel}>
+                            {!disableF()&&<label className={styles.checkboxLabel}>
                                 <input
                                     type="checkbox"
                                     checked={settingsForm.enableWebSearch}
                                     onChange={(e) => onChangeV('thinkingMode',e.target.checked)}
                                 />
                                 联网搜索
-                            </label>
+                            </label>}
                             {/* <label className={styles.checkboxLabel}>
                                 <input
                                     type="checkbox"
@@ -270,14 +280,14 @@ const editChatModal: React.FC<EditChatModalProps> = ({ isOpen, onClose, handelEd
                                 />
                                 代码解释器
                             </label> */}
-                            <label className={styles.checkboxLabel}>
+                            {!disableF()&&<label className={styles.checkboxLabel}>
                                 <input
                                     type="checkbox"
                                     checked={settingsForm.enableFileUpload}
                                     onChange={(e) => onChangeV('enableFileUpload',e.target.checked)}
                                 />
                                 文件上传
-                            </label>
+                            </label>}
                             <label className={styles.checkboxLabel}>
                                 <input
                                     type="checkbox"

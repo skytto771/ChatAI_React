@@ -77,7 +77,7 @@
             transition: all 0.25s ease;
 
             &:hover {
-                background: var(--accent-glow);
+                background: var(--hover);
                 color: var(--accent);
                 border-color: var(--accent);
                 opacity: 1;

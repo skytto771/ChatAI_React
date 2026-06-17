@@ -32,6 +32,8 @@ const api = {
         getMessageList: '/message/getMessageList',
         generateAiReply: '/message/generateAiReply',
         resumeReply: '/message/resume',
+        reGenerate: '/message/reGenerate',
+
     },
     modelSettings:{
         getSettings: '/modelSettings/getSettings',

@@ -3,6 +3,7 @@
     background: var(--sidebar-bg);
     backdrop-filter: blur(24px);
     border-right: 1px solid var(--border);
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     height: 100vh;

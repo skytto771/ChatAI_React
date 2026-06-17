@@ -4,7 +4,6 @@ import { useToast } from '@/context/ToastContext'
 import ChatSidebar from '@/components/ChatSidebar';
 import ChatMessage from '@/components/ChatMessage';
 import InputArea from '@/components/InputArea';
-import TypingIndicator from '@/components/TypingIndicator';
 import ModelBadge from '@/components/ModelBadge';
 import EditChatModal from '@/components/EditChatModal';
 import SettingsModal from '@/components/SettingsModal';
@@ -13,6 +12,7 @@ import styles from './index.module.scss';
 import { useNavigate } from 'react-router';
 import EmptyChat from '@/components/EmptyChat';
 import type { chatSettings } from '@/types';
+import MessageNav from './components/MessageNav';
 
 const Chat: React.FC = () => {
     const {
@@ -23,6 +23,7 @@ const Chat: React.FC = () => {
         loadCurMessages,
         addMessage,
         generateAiReply,
+        reGenerateReply,
         createNewChat,
         resume,
         setActiveChatId,
@@ -48,13 +49,13 @@ const Chat: React.FC = () => {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const isNearBottomRef = useRef(true); // 标记用户是否靠近底部
 
-    const isInitialMountRef = useRef(true);
-    const previousChatIdRef = useRef(activeChatId);
+    const userMsgEleMap = useRef<Map<string, HTMLDivElement>>(new Map());
 
     // 加载会话信息
     useEffect(() => {
         return ()=>{
             loadChats().catch(err=>toast.error(err));
+            loadModelSettings()
         }
     }, [loadChats]);
 
@@ -62,6 +63,7 @@ const Chat: React.FC = () => {
     useEffect(() => {
         if (activeChatId) {
             loadCurMessages(activeChatId).then(res=>{
+                scrollToBottom()
                 if(res.status === 'generating'){
                     setIsResponding(true)
                     resume(activeChatId,res.messageId!)
@@ -72,65 +74,17 @@ const Chat: React.FC = () => {
         }
     }, [activeChatId]);
 
-    // 切换会话时重置滚动相关状态
-    useEffect(() => {
-        if (previousChatIdRef.current !== activeChatId) {
-            // 会话切换，重置滚动恢复标记
-            isInitialMountRef.current = true;
-            previousChatIdRef.current = activeChatId;
-        }
-    }, [activeChatId]);
-
-    // 统一的滚动控制
     useEffect(() => {
         const container = messagesContainerRef.current;
         if (!container) return;
         
         const threshold = 120;
-        // 恢复滚动位置（初始化）
-        const scrollPositions = JSON.parse(localStorage.getItem('conversations_scrollTop') || '{}');
-        const savedScrollTop = scrollPositions[activeChatId];
-        if (savedScrollTop !== undefined && !isResponding) {
-            // 等待 DOM 完全渲染
-            const waitForStableHeight = () => {
-                const currentHeight = container.scrollHeight;
-                requestAnimationFrame(() => {
-                    const newHeight = container.scrollHeight;
-                    if (newHeight === currentHeight) {
-                        // 高度稳定了，执行滚动
-                        container.scrollTo({
-                            top: savedScrollTop,
-                            behavior: 'smooth'
-                        });
-                        if(savedScrollTop <= newHeight){
-                            isInitialMountRef.current = false
-                        }
-                    } else {
-                        // 高度还在变化，重试
-                        waitForStableHeight();
-                    }
-                });
-            };
-            waitForStableHeight();
-        }
-        if(messages.length === 0 || isResponding){
-            isInitialMountRef.current = false
-            if(isResponding){
-                scrollToBottom()
-            }
-        }
         const handleScroll = () => {
             const { scrollTop, scrollHeight, clientHeight } = container;
             isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < threshold;
-            // 切换完成后才存储
-            if (!isInitialMountRef.current && !isResponding) {
-                const newPositions = JSON.parse(localStorage.getItem('conversations_scrollTop') || '{}');
-                newPositions[activeChatId] = scrollTop;
-                localStorage.setItem('conversations_scrollTop', JSON.stringify(newPositions));
-            }
         };
 
-        if (isResponding && isNearBottomRef.current && !isInitialMountRef.current) {
+        if (isResponding && isNearBottomRef.current) {
             scrollToBottom()
         }
         
@@ -148,6 +102,14 @@ const Chat: React.FC = () => {
             });
         }
     }
+
+    const setRef = useCallback((id:string)=>(node: HTMLDivElement | null)=>{
+        if(node){
+            userMsgEleMap.current.set(id,node)
+        }else{
+            userMsgEleMap.current.delete(id)
+        }
+    },[])
 
     const handleQuickCreate = async ({model,isThinking}: chatSettings) => {
         if (isResponding) {
@@ -217,6 +179,11 @@ const Chat: React.FC = () => {
         [isResponding, setIsResponding, setActiveChatId]
     );
 
+    const scrollToMsg = (id: string) => {
+        const el = userMsgEleMap.current.get(id);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     // 登出
     const handleLogout = async () => {
         session.delSession()
@@ -229,27 +196,6 @@ const Chat: React.FC = () => {
         setIsEditChatModalOpen(true)
     }
 
-    // 快捷键
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setIsEditChatModalOpen(false);
-                setIsSettingsModalOpen(false);
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === ',') {
-                e.preventDefault();
-                setIsSettingsModalOpen(true);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown)
-            try{
-                loadModelSettings()
-            }catch(err){
-                toast.error(err as string)}
-        }
-    }, []);
 
     return (
         <div className={styles.chat}>
@@ -277,20 +223,15 @@ const Chat: React.FC = () => {
                     onStartChat={handleQuickCreate}
                 />:
                 <>
+                <div className={styles.chatArea}>
                     <div className={styles.messagesContainer} ref={messagesContainerRef}>
                         {messages.map((message) => (
-                            <ChatMessage key={message.id} role={message.role} text={message.content} reasoning={message.reasoning} isResponse={activeChatLastMessage?.id === message.id && isResponding} />
+                            <ChatMessage ref={setRef(message.id)} key={message.id} role={message.role} text={message.content} htmlText={message.contentMd} reasoning={message.reasoning} isResponse={activeChatLastMessage?.id === message.id && isResponding} onRegenerate={()=>reGenerateReply(activeChatId,message.id)} />
                         ))}
-                        {isResponding && (
-                            <div className={`${styles.message} ${styles.ai}`}>
-                                <div className={styles.avatar}>🤖</div>
-                                <div className={styles.bubble}>
-                                    <TypingIndicator />
-                                </div>
-                            </div>
-                        )}
                     </div>
-                    <InputArea onSend={handleSendMessage} disabled={isResponding} />
+                    <MessageNav messages={messages} onSelect={scrollToMsg} />
+                </div>
+                <InputArea onUpdateSetting={updateChatModelSettings} chat={activeChat!} onSend={handleSendMessage} disabled={isResponding} />
                 </>}
             </div>
             <EditChatModal selectChat={selectChat} handelEditChatModel={updateChatModelSettings} isOpen={isEditChatModalOpen} onClose={() => setIsEditChatModalOpen(false)} />

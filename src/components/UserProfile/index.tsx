@@ -41,7 +41,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ onOpenSettings, onLogout }) =
                 <span className={styles.userArrow}>▾</span>
             </div>
             <div className={`${styles.popupMenu} ${isExpanded ? styles.visible : ''}`}>
-                <button className={styles.popupMenuItem} onClick={onOpenSettings}>
+                <button className={styles.popupMenuItem} onClick={()=>{
+                    closePopup()
+                    onOpenSettings()
+                }}>
                     <span className={styles.menuIcon}>⚙️</span> 系统设置
                 </button>
                 <button className={`${styles.popupMenuItem} ${styles.danger}`} onClick={onLogout}>

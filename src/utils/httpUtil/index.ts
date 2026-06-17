@@ -36,7 +36,7 @@ http.interceptors.response.use(
             return Promise.reject('与服务器断开链接');
         }
         const code = error.response.data.code;
-        console.log('code:', code)
+
         let message = ''
         switch (code) {
             case 1000:
@@ -106,7 +106,6 @@ const httpStream:api = {
                 }
                 resolve(res)
             }catch(err){
-                console.log('err:', err)
                 reject(err)
             }
         })
