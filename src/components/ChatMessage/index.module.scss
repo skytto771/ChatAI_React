@@ -1,274 +1,330 @@
 // 在原有样式基础上添�?
 
 .message {
-    display: flex;
-    gap: 12px;
-    max-width: 80%;
-    animation: msgFadeIn 0.4s ease-out;
+  display: flex;
+  gap: 12px;
+  max-width: 80%;
+  animation: msgFadeIn 0.4s ease-out;
 
-    &.user {
-        align-self: flex-end;
-        flex-direction: row-reverse;
+  &.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
 
-        .bubble {
-            background: var(--bubble-user);
-            border-bottom-right-radius: 4px;
-            border-bottom-left-radius: 18px;
-            border-color: rgba(255, 255, 255, 0.08);
-        }
-
-        // 用户消息的工具栏在右�?
-        .toolbar {
-            justify-content: flex-end;
-        }
+    .bubble {
+      background: var(--bubble-user);
+      border-bottom-right-radius: 4px;
+      border-bottom-left-radius: 18px;
+      border-color: rgba(255, 255, 255, 0.08);
     }
 
-    &.assistant {
-        .avatar {
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
-            color: #fff;
-        }
-
-        // 助手消息的工具栏在左�?
-        .toolbar {
-            justify-content: flex-start;
-        }
+    // 用户消息的工具栏在右�?
+    .toolbar {
+      justify-content: flex-end;
     }
+  }
+
+  &.assistant {
+    .avatar {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color: #fff;
+    }
+
+    // 助手消息的工具栏在左�?
+    .toolbar {
+      justify-content: flex-start;
+    }
+  }
 }
 
 .avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 12px;
-    background: var(--bubble-user);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: var(--bubble-user);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .bubbleWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-width: 100%;
-    flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 100%;
+  flex: 1;
 }
 
 .bubble {
-    background: var(--bubble-ai);
-    max-width: 666px;
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 18px;
-    border-bottom-left-radius: 4px;
-    font-size: 0.92rem;
-    line-height: 1.55;
-    color: var(--text-primary);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(4px);
-    word-break: break-word;
+  background: var(--bubble-ai);
+  max-width: 666px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(4px);
+  word-break: break-word;
 
-    // 用户消息气泡
-    .user & {
-        border-bottom-left-radius: 18px;
-        border-bottom-right-radius: 4px;
-    }
+  // 用户消息气泡
+  .user & {
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 4px;
+  }
 }
 
 .messageText {
-    box-sizing: border-box;
-    white-space: pre-wrap;
-    word-break: break-word;
-    transition: background .3s;
-    position: relative;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+  transition: background 0.3s;
+  position: relative;
 }
 
 // ========== 工具栏样�?==========
 .toolbar {
-    display: flex;
-    gap: 4px;
-    padding: 2px 4px;
-    opacity: 0.4;
-    transition: opacity 0.2s ease;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 4px;
+  padding: 2px 4px;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  flex-wrap: wrap;
 
-    // 鼠标悬停时显示工具栏
-    .bubbleWrapper:hover & {
-        opacity: 1;
-    }
-
-    // 编辑状态下始终显示
-    .bubbleWrapper:has(.editing) &,
-    .bubbleWrapper:has(.cancelBtn) & {
-        opacity: 1;
-    }
+  // 鼠标悬停时显示工具栏
+  .bubbleWrapper:hover & {
+    opacity: 1;
+  }
 }
 
 .toolbarBtn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
 
-    &:hover {
-        background: var(--surface-hover);
-        color: var(--text-primary);
-        transform: translateY(-1px);
-    }
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
 
-    &:active {
-        transform: translateY(0px);
-    }
+  &:active {
+    transform: translateY(0px);
+  }
 
-    .btnIcon {
-        font-size: 0.85rem;
-        line-height: 1;
-    }
+  .btnIcon {
+    font-size: 0.85rem;
+    line-height: 1;
+  }
 
-    .btnLabel {
-        font-weight: 500;
-        letter-spacing: 0.02em;
-    }
+  .btnLabel {
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
 
-    // 复制成功状�?
-    &.copied {
-        color: var(--success, #52c41a);
-        background: rgba(82, 196, 26, 0.1);
-    }
-
-    // 编辑状�?
-    &.editing {
-        color: var(--accent);
-        background: rgba(var(--accent-rgb, 64, 169, 255), 0.1);
-    }
-
-    // 取消按钮
-    &.cancelBtn {
-        color: var(--error, #ff4d4f);
-        
-        &:hover {
-            background: rgba(255, 77, 79, 0.1);
-        }
-    }
+  // 复制成功状�?
+  &.copied {
+    color: var(--success, #52c41a);
+    background: rgba(82, 196, 26, 0.1);
+  }
 }
 
-// ========== 编辑文本�?==========
-.editTextarea {
-    width: 100%;
-    min-height: 60px;
-    padding: 8px 12px;
-    background: var(--surface);
-    border: 2px solid var(--accent);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 0.92rem;
-    line-height: 1.55;
-    font-family: inherit;
-    resize: vertical;
-    transition: border-color 0.3s ease;
+// ========== 编辑区域（类主输入框样式）==========
+.editingMessage {
+  width: 80%;
+}
 
-    &:focus {
-        outline: none;
-        border-color: var(--accent-light);
-        box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 64, 169, 255), 0.2);
+.editWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  background: var(--input-bg);
+  border-radius: 16px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+}
+
+.editInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  resize: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+  padding: 6px 0;
+  outline: none;
+  max-height: calc(0.9rem * 1.5 * 6 + 12px);
+  /* 字号 * 行高 * 6行 + 上下padding */
+  line-height: 1.5;
+
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+    border-radius: 4px;
+  }
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .cancelEditBtn {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    &:hover {
+      background: var(--hover);
+      color: var(--text-primary);
+      border-color: var(--text-secondary);
+    }
+  }
+
+  .sendEditBtn {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+
+    svg {
+      transform: translate(-1px, 1px);
     }
 
-    &::placeholder {
-        color: var(--text-disabled);
+    &:hover {
+      filter: brightness(1.2);
+      transform: scale(1.06);
     }
+  }
 }
 
 // ========== 思考过程样式更�?==========
 .thinkingMessage {
-    position: relative;
-    margin-bottom: 10px;
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--accent);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: var(--text-secondary);
-    font-style: italic;
-    word-break: break-word;
-    white-space: pre-wrap;
-    backdrop-filter: blur(4px);
-    transition: all 0.3s ease;
+  position: relative;
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  font-style: italic;
+  word-break: break-word;
+  white-space: pre-wrap;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
 
-    &::before {
-        content: "💭 思考过程";
-        display: block;
-        font-style: normal;
-        font-weight: 600;
-        font-size: 0.72rem;
-        color: var(--accent);
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-        opacity: 0.85;
-    }
+  &::before {
+    content: "💭 思考过程";
+    display: block;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.85;
+  }
 
-    &.streaming {
-        animation: thinkingPulse 1.6s ease-in-out infinite;
-    }
+  &.streaming {
+    animation: thinkingPulse 1.6s ease-in-out infinite;
+  }
 
-    @keyframes thinkingPulse {
-        0%, 100% { opacity: 0.6; }
-        50% { opacity: 1; }
+  @keyframes thinkingPulse {
+    0%,
+    100% {
+      opacity: 0.6;
     }
+    50% {
+      opacity: 1;
+    }
+  }
 
-    // 长思考折叠（可选）
-    &.collapsible {
-        max-height: 160px;
-        overflow: hidden;
-        cursor: pointer;
-        transition: max-height 0.4s ease;
-    }
+  // 长思考折叠（可选）
+  &.collapsible {
+    max-height: 160px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: max-height 0.4s ease;
+  }
 
-    &.collapsible::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 60px;
-        background: linear-gradient(transparent, var(--surface) 80%);
-        pointer-events: none;
-    }
+  &.collapsible::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(transparent, var(--surface) 80%);
+    pointer-events: none;
+  }
 
-    &.collapsible:hover::after {
-        background: linear-gradient(transparent, var(--accent-glow) 80%);
-    }
+  &.collapsible:hover::after {
+    background: linear-gradient(transparent, var(--accent-glow) 80%);
+  }
 
-    &.expanded {
-        max-height: none;
-    }
+  &.expanded {
+    max-height: none;
+  }
 
-    &.expanded::after {
-        display: none;
-    }
+  &.expanded::after {
+    display: none;
+  }
 }
 
 // ========== 动画 ==========
 @keyframes msgFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(14px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

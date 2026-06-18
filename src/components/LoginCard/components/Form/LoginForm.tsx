@@ -42,9 +42,9 @@ const LoginForm = ({ onSuccess, onError }: LoginFormProps) => {
 
       setLoading(false);
       onSuccess(account);
-    } catch (err) {
+    } catch (err:any) {
       setLoading(false);
-      onError(err as string);
+      onError(err?.message || String(err));
     }
   };
 

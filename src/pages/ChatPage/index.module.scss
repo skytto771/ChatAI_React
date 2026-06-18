@@ -60,7 +60,7 @@
     letter-spacing: 0.03em;
 }
 .chatArea {
-    position: relative;       /* 作为绝对定位的参�?*/
+    position: relative;       /* 作为绝对定位的参�?*/
     display: flex;
     flex: 1;
     min-height: 0; 
@@ -89,7 +89,9 @@
         }
     }
     @media (max-width: 720px) {
-
+        .messagesContainer{
+            padding: 16px;
+        }
     }
 }
 

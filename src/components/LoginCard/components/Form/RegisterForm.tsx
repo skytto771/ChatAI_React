@@ -56,8 +56,8 @@ const RegisterForm = ({ onSuccess, onError }: RegisterFormProps) => {
             await http.post(api.user.register,submitData)
             onSuccess(email);
             setLoading(false);
-        }catch(err){
-            onError(err as string)
+        }catch(err:any){
+            onError(err?.message || String(err))
             setLoading(false);
         }
     };
@@ -94,8 +94,8 @@ const RegisterForm = ({ onSuccess, onError }: RegisterFormProps) => {
                 });
             }, 1000);
             
-        } catch (err) {
-            onError(err as string);
+        } catch (err:any) {
+            onError(err?.message || String(err));
         } finally {
             setCodeSending(false);
         }

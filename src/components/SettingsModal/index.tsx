@@ -64,8 +64,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         maxTokens,
       });
       toast.success("设置已保存");
-    } catch (error) {
-      toast.error(error as string);
+    } catch (error: any) {
+      toast.error(error?.message || String(error));
     }
   };
 

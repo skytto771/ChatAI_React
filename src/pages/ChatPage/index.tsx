@@ -24,6 +24,7 @@ const Chat: React.FC = () => {
     addMessage,
     generateAiReply,
     reGenerateReply,
+    editMessage,
     createNewChat,
     resume,
     setActiveChatId,
@@ -56,7 +57,7 @@ const Chat: React.FC = () => {
   // 加载会话信息
   useEffect(() => {
     return () => {
-      loadChats().catch((err) => toast.error(err));
+      loadChats().catch((err) => toast.error(err?.message || String(err)));
       loadModelSettings();
     };
   }, [loadChats]);
@@ -73,7 +74,7 @@ const Chat: React.FC = () => {
           }
         })
         .catch((err) => {
-          toast.error(err);
+          toast.error(err?.message || String(err));
         });
     }
   }, [activeChatId]);
@@ -147,8 +148,8 @@ const Chat: React.FC = () => {
       try {
         await generateAiReply(chatId);
         setIsResponding(false);
-      } catch (error) {
-        toast.error(error as string);
+      } catch (error: any) {
+        toast.error(error?.message || String(error));
       }
     },
     [setIsResponding],
@@ -163,8 +164,8 @@ const Chat: React.FC = () => {
         await addMessage(activeChatId, "user", text, 0);
         scrollToBottom();
         await handleAIResponse(activeChatId);
-      } catch (error) {
-        toast.error(error as string);
+      } catch (error: any) {
+        toast.error(error?.message || String(error));
       }
     },
     [activeChatId, isResponding],
@@ -178,8 +179,8 @@ const Chat: React.FC = () => {
         setActiveChatId("");
       }
       toast.success("删除成功");
-    } catch (err) {
-      toast.error(err as string);
+    } catch (err: any) {
+      toast.error(err?.message || String(err));
     }
   };
 
@@ -226,7 +227,7 @@ const Chat: React.FC = () => {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenChatSettings={openChatSettings}
         onLogout={handleLogout}
-        onToggleTop={(chatId,isTop) => toggleChatTop(chatId,isTop)}
+        onToggleTop={(chatId, isTop) => toggleChatTop(chatId, isTop)}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
@@ -256,12 +257,16 @@ const Chat: React.FC = () => {
                   <ChatMessage
                     ref={setRef(message.id)}
                     key={message.id}
+                    messageId={message.id}
                     role={message.role}
                     text={message.content}
                     htmlText={message.contentMd}
                     reasoning={message.reasoning}
                     isResponse={
                       activeChatLastMessage?.id === message.id && isResponding
+                    }
+                    onEdit={(messageId, newText) =>
+                      editMessage(activeChatId, messageId, newText)
                     }
                     onRegenerate={() =>
                       reGenerateReply(activeChatId, message.id)

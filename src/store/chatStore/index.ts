@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import type { ChatState, Message, chatSettings } from "@/types";
-import { devtools } from "zustand/middleware";
+import type { ChatState, chatSettings } from "@/types";
 import { http, marked } from "@/utils";
 import api from "@/api";
 import { httpStream } from "@/utils/httpUtil";
@@ -24,19 +23,24 @@ interface ChatStore extends ChatState {
   generateAiReply: (chatId: string) => Promise<void>;
   resume: (chatId: string, messageId: string) => Promise<void>;
   reGenerateReply: (chatId: string, messageId: string) => Promise<void>;
+  editMessage: (
+    chatId: string,
+    messageId: string,
+    text: string,
+  ) => Promise<void>;
   createNewChat: (config: chatSettings) => Promise<string>;
   updateChatTitle: (chatId: string, title: string) => Promise<void>;
   setActiveChatId: (id: string) => void;
   setIsResponding: (isResponding: boolean) => void;
   deleteChat: (chatId: string) => Promise<void>;
-  toggleChatTop: (chatId: string,isTop: boolean) => Promise<void>;
+  toggleChatTop: (chatId: string, isTop: boolean) => Promise<void>;
   getChatModelSettings: (chatId: string) => Promise<chatSettings>;
   updateChatModelSettings: (config: updateSettings) => Promise<string>;
   updateUserModelSettings: (settings: chatSettings) => Promise<void>;
   loadModelSettings: () => Promise<void>;
 }
 
-export const useChatStore = create<ChatStore>((set, get) => ({
+export const useChatStore = create<ChatStore>((set, _get) => ({
   chats: [],
   activeChatId: "",
   isResponding: false,
@@ -184,6 +188,41 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
+  editMessage: async (chatId, messageId, text) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // 更新本地：修改消息内容并删除后续消息
+        set((state) => {
+          const chats = state.chats.map((c) => {
+            if (c.id === chatId) {
+              const position = c.messages.findIndex((m) => m.id === messageId);
+              if (position !== -1) {
+                c.messages[position] = {
+                  ...c.messages[position],
+                  content: text,
+                };
+                c.messages.splice(position + 1);
+              }
+            }
+            return c;
+          });
+          return { chats };
+        });
+
+        // 调用后端 editAndRegenerate（更新消息 + 删除后续 + AI 重新生成）
+        const res = await httpStream.post(api.message.editAndRegenerate, {
+          conversationId: chatId,
+          messageId,
+          content: text,
+        });
+
+        await handleStreamResponse(chatId, res, set, resolve);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+
   createNewChat: ({ title, model }) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -249,7 +288,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
   toggleChatTop: async (chatId, isTop) => {
-    const res = await http.post(api.conversation.toggleTop, { id: chatId, isTop });
+    const res = await http.post(api.conversation.toggleTop, {
+      id: chatId,
+      isTop,
+    });
     const newIsTop = res.data.isTop;
     set((state) => ({
       chats: state.chats
@@ -258,7 +300,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
   getChatModelSettings: async (chatId) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       const res = await http.post(api.modelSettings.getConversationSettings, {
         conversationId: chatId,
       });
@@ -279,7 +321,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
   updateChatModelSettings: async (updates) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       const res = await http.post(
         api.modelSettings.updateConversationSettings,
         updates,
@@ -313,13 +355,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
   loadModelSettings: async () => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       try {
         const res = await http.post(api.modelSettings.getSettings, {});
         const settings = res.data;
         set({ settings });
+        resolve();
       } catch (err) {
-        reject(err);
+        throw err;
       }
     });
   },

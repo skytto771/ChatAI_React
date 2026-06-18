@@ -1,30 +1,49 @@
-import { useEffect, useState } from 'react';
-import styles from './index.module.scss';
+import { useCallback, useEffect, useRef, useState } from "react";
+import styles from "./index.module.scss";
 
 interface ToastProps {
-    message: string;
-    type: 'success' | 'error' | 'info' | 'warning';
-    duration?: number;
-    onClose: () => void;
+  message: string;
+  type: "success" | "error" | "info" | "warning";
+  duration?: number;
+  onClose: () => void;
 }
 
-const Toast = ({ message, type = 'info', duration = 2800, onClose }: ToastProps) => {
-    const [visible, setVisible] = useState(false);
+const Toast = ({
+  message,
+  type = "info",
+  duration = 2800,
+  onClose,
+}: ToastProps) => {
+  const [visible, setVisible] = useState(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
-    useEffect(() => {
-        setVisible(true);
-        const timer = setTimeout(() => {
-            setVisible(false);
-            setTimeout(onClose, 500); // 等待动画结束
-        }, duration);
-        return () => clearTimeout(timer);
-    }, [message, duration, onClose]);
+  const handleClose = useCallback(() => {
+    onCloseRef.current();
+  }, []);
 
-    return (
-        <div className={`${styles.toast} ${visible ? styles.show : ''} ${type ? styles[type] : ''}`}>
-            {message}
-        </div>
-    );
+  useEffect(() => {
+    setVisible(true);
+    const hideTimer = setTimeout(() => {
+      setVisible(false);
+    }, duration);
+    const removeTimer = setTimeout(() => {
+      handleClose();
+    }, duration + 500);
+
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(removeTimer);
+    };
+  }, [message, duration, handleClose]);
+
+  return (
+    <div
+      className={`${styles.toast} ${visible ? styles.show : ""} ${type ? styles[type] : ""}`}
+    >
+      {message}
+    </div>
+  );
 };
 
 export default Toast;

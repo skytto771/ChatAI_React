@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { type Chat, MODEL_DISPLAY_NAMES } from "@/types";
+import { type Chat } from "@/types";
 import UserProfile from "@/components/UserProfile";
 import styles from "./index.module.scss";
 import { useToast } from "@/context/ToastContext";
@@ -44,17 +44,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const editInputRef = useRef<HTMLInputElement>(null);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-  const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    const now = new Date().getTime();
-    const diff = now - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days === 0) return "今天";
-    if (days === 1) return "昨天";
-    if (days < 7) return `${days}天前`;
-    return date.toLocaleDateString();
-  };
-
   const toggleChatMenu = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     setActivePopupId(activePopupId === chatId ? null : chatId);
@@ -86,8 +75,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       try {
         await onDeleteChat(selectedChatId);
         setSelectedChatId("");
-      } catch (err) {
-        toast.error(err as string);
+      } catch (err: any) {
+        toast.error(err?.message || String(err));
       }
     }
     closeAllPopups();
@@ -110,8 +99,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     if (editingChatId && editTitle.trim()) {
       try {
         await onRenameChat(editingChatId, editTitle.trim());
-      } catch (err) {
-        toast.error(err as string);
+      } catch (err: any) {
+        toast.error(err?.message || String(err));
       }
     }
     setEditingChatId(null);
@@ -268,7 +257,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           )}
           {groupedRecent.map((group) => (
             <div key={group.label} className={styles.section}>
-              <div className={styles.sectionHeader}>🕐 {group.label}</div>
+              <div className={styles.sectionHeader}>{group.label}</div>
               {group.chats.map((chat) => (
                 <div
                   key={chat.id}
