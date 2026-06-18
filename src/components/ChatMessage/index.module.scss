@@ -1,4 +1,4 @@
-// 在原有样式基础上添加
+// 在原有样式基础上添�?
 
 .message {
     display: flex;
@@ -17,7 +17,7 @@
             border-color: rgba(255, 255, 255, 0.08);
         }
 
-        // 用户消息的工具栏在右侧
+        // 用户消息的工具栏在右�?
         .toolbar {
             justify-content: flex-end;
         }
@@ -29,7 +29,7 @@
             color: #fff;
         }
 
-        // 助手消息的工具栏在左侧
+        // 助手消息的工具栏在左�?
         .toolbar {
             justify-content: flex-start;
         }
@@ -86,7 +86,7 @@
     position: relative;
 }
 
-// ========== 工具栏样式 ==========
+// ========== 工具栏样�?==========
 .toolbar {
     display: flex;
     gap: 4px;
@@ -141,13 +141,13 @@
         letter-spacing: 0.02em;
     }
 
-    // 复制成功状态
+    // 复制成功状�?
     &.copied {
         color: var(--success, #52c41a);
         background: rgba(82, 196, 26, 0.1);
     }
 
-    // 编辑状态
+    // 编辑状�?
     &.editing {
         color: var(--accent);
         background: rgba(var(--accent-rgb, 64, 169, 255), 0.1);
@@ -163,7 +163,7 @@
     }
 }
 
-// ========== 编辑文本框 ==========
+// ========== 编辑文本�?==========
 .editTextarea {
     width: 100%;
     min-height: 60px;
@@ -189,7 +189,7 @@
     }
 }
 
-// ========== 思考过程样式更新 ==========
+// ========== 思考过程样式更�?==========
 .thinkingMessage {
     position: relative;
     margin-bottom: 10px;

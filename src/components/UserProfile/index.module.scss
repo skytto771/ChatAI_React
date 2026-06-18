@@ -27,6 +27,7 @@
 }
 
 .userAvatar {
+    overflow: hidden;
     width: 38px;
     height: 38px;
     border-radius: 50%;
@@ -39,6 +40,11 @@
     box-shadow: 0 3px 12px var(--accent-glow);
     color: #fff;
     font-weight: 600;
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
 .userInfoText {

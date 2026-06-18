@@ -4,6 +4,7 @@ import { useTheme } from "@/context/ThemeContext";
 import styles from "./index.module.scss";
 import { useUserStore, useChatStore } from "@/store";
 import { useToast } from "@/context/ToastContext";
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 
 type SettingsPanel = "user" | "system" | "roles" | "model" | "about";
 
@@ -20,6 +21,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   const [activePanel, setActivePanel] = useState<SettingsPanel>("user");
   const [isUserEdit, setIsUserEdit] = useState(false);
+  const {
+    uploading: avatarUploading,
+    fileInputRef,
+    triggerFileSelect,
+    handleFileChange,
+  } = useAvatarUpload();
   // 提示词配置
   // const [tempDefaultModel, setTempDefaultModel] = useState('gtp-3.5-turbo');
   // const [tempDefaultSystemPrompt, setTempDefaultSystemPrompt] = useState('');
@@ -102,7 +109,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     262144: "256K",
     524288: "512K",
     1048576: "1M",
-  }
+  };
 
   // // token 选项
   const tokenOptions = {
@@ -117,7 +124,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     262144: "256K",
     524288: "512K",
     1048576: "1M",
-  }
+  };
 
   useEffect(() => {
     if (settings.contextLimit != undefined)
@@ -137,13 +144,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <div>
             <div className={styles.settingsSectionLabel}>👤 个人信息</div>
             <label className={styles.settingsLabel}>头像</label>
-            {userStore.user.avatarUrl ? (
-              <div className={styles.userAvatar}>
-                <img src="" alt="" />
-              </div>
-            ) : (
-              <div className={styles.userAvatar}>🧑‍🚀</div>
-            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            <div
+              className={`${styles.userAvatar} ${avatarUploading ? styles.avatarUploading : ""} ${userStore.user.avatarUrl ? "" : styles.avatarPlaceholder}`}
+              onClick={() => !avatarUploading && triggerFileSelect()}
+              title="点击更换头像"
+            >
+              {userStore.user.avatarUrl ? (
+                <img src={userStore.user.avatarUrl} alt="头像" />
+              ) : (
+                <span>🧑‍🚀</span>
+              )}
+              {avatarUploading && (
+                <div className={styles.avatarOverlay}>
+                  <span className={styles.avatarSpinner} />
+                </div>
+              )}
+            </div>
             <label className={styles.settingsLabel}>用户名</label>
             <input
               type="text"
@@ -248,7 +271,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               onChange={(e) => setContextLimit(Number(e.target.value))}
               className={styles.settingsSelect}
             >
-              {Object.keys(contextLimits).map((limit,index) => {
+              {Object.keys(contextLimits).map((limit, index) => {
                 return (
                   <option key={limit} value={limit}>
                     {Object.values(contextLimits)[index]}
@@ -259,15 +282,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
             <label className={styles.settingsLabel}>单次回复最大 Token</label>
             <select
-                value={maxTokens}
-                onChange={(e) => setMaxTokens(Number(e.target.value))}
-                className={styles.settingsSelect}
+              value={maxTokens}
+              onChange={(e) => setMaxTokens(Number(e.target.value))}
+              className={styles.settingsSelect}
             >
-                {Object.keys(tokenOptions).map((token,index) => (
-                    <option key={token} value={token}>
-                      {Object.values(tokenOptions)[index]}
-                    </option>
-                ))}
+              {Object.keys(tokenOptions).map((token, index) => (
+                <option key={token} value={token}>
+                  {Object.values(tokenOptions)[index]}
+                </option>
+              ))}
             </select>
 
             {/* 思考模式配置 */}
@@ -385,7 +408,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               color: "var(--text-secondary)",
             }}
           >
-            AI Chat {import.meta.env.VITE_VERSION}
+            星语 {import.meta.env.VITE_VERSION}
             <br />
             智能对话平台
             <br />
