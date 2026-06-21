@@ -56,10 +56,8 @@ const Chat: React.FC = () => {
 
   // 加载会话信息
   useEffect(() => {
-    return () => {
-      loadChats().catch((err) => toast.error(err?.message || String(err)));
-      loadModelSettings();
-    };
+    loadChats().catch((err) => toast.error(err?.message || String(err)));
+    loadModelSettings();
   }, [loadChats]);
 
   // 加载聊天数据
