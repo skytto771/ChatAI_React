@@ -384,7 +384,7 @@ const editChatModal: React.FC<EditChatModalProps> = ({
                   />
                 </div>
               )}
-              <div className={styles.formGroup}></div>
+              {/* <div className={styles.formGroup}></div> */}
             </div>
           </div>
 

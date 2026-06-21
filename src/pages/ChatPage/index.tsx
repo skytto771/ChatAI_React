@@ -187,10 +187,6 @@ const Chat: React.FC = () => {
   // 切换对话
   const handleSelectChat = useCallback(
     (chatId: string) => {
-      if (isResponding) {
-        toast.warning("请等待当前回复完成后再切换对话");
-        return;
-      }
       setIsResponding(false);
       setActiveChatId(chatId);
       setIsSidebarOpen(false);

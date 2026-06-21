@@ -20,7 +20,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const toast = useToast();
 
   const [activePanel, setActivePanel] = useState<SettingsPanel>("user");
-  const [isUserEdit, setIsUserEdit] = useState(false);
+  // const [isUserEdit, setIsUserEdit] = useState(false);
   const {
     uploading: avatarUploading,
     fileInputRef,
@@ -44,10 +44,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     settings.enableFileUpload,
   );
 
-  const handleSaveUser = () => {
-    setIsUserEdit(false);
-    toast.success("保存成功");
-  };
+  // const handleSaveUser = () => {
+  //   setIsUserEdit(false);
+  //   toast.success("保存成功");
+  // };
 
   // const handleSaveRoles = () => {
   //     toast.success('角色默认值已保存')
@@ -69,9 +69,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const savePerfrence = () => {
-    toast.success("偏好设置已保存");
-  };
+  // const savePerfrence = () => {
+  //   toast.success("偏好设置已保存");
+  // };
 
   const themes: { value: Theme; label: string; gradient: string }[] = [
     {
@@ -181,7 +181,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               className={styles.settingsInput}
               disabled={true}
             />
-            {isUserEdit ? (
+            {/* {isUserEdit ? (
               <button className={styles.btnSecondary} onClick={handleSaveUser}>
                 保存用户设置
               </button>
@@ -192,7 +192,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               >
                 修改用户设置
               </button>
-            )}
+            )} */}
           </div>
         );
       case "system":
@@ -214,7 +214,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 </div>
               ))}
             </div>
-            <div
+            {/* <div
               className={styles.settingsSectionLabel}
               style={{ marginTop: "18px" }}
             >
@@ -222,7 +222,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </div>
             <button className={styles.btnSecondary} onClick={savePerfrence}>
               保存偏好
-            </button>
+            </button> */}
           </div>
         );
       // case 'roles':
