@@ -6,6 +6,8 @@ const baseUrl =
     ? import.meta.env.VITE_DEVELOPMENT_API_URL
     : import.meta.env.VITE_PRODUCTION_API_URL;
 
+console.log("当前环境:", import.meta.env.MODE, baseUrl);
+
 const http = axios.create({
   baseURL: baseUrl,
   timeout: 200000,
