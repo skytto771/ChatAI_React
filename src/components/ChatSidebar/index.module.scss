@@ -198,6 +198,12 @@
   opacity: 1;
 }
 
+@media screen and (max-width: 720px) {
+  .chatActionBtn {
+    opacity: 1;
+  }
+}
+
 .renameInput {
   flex: 1;
   background: var(--input-bg, rgba(255, 255, 255, 0.1));
