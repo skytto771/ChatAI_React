@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatState, chatSettings } from "@/types";
+import type { Chat, ChatState, chatSettings } from "@/types";
 import { http, marked } from "@/utils";
 import api from "@/api";
 import { httpStream } from "@/utils/httpUtil";
@@ -96,7 +96,9 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
         await http.post(api.conversation.unarchiveConversation, { id: chatId });
         set((state) => {
           const restored = state.archivedChats.find((c) => c.id === chatId);
-          const newArchived = state.archivedChats.filter((c) => c.id !== chatId);
+          const newArchived = state.archivedChats.filter(
+            (c) => c.id !== chatId,
+          );
           if (restored) {
             return {
               archivedChats: newArchived,
@@ -326,7 +328,11 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
           const newArchived = archivedChat
             ? [{ ...archivedChat, isArchived: true }, ...state.archivedChats]
             : state.archivedChats;
-          return { chats: newChats, activeChatId: newActiveId, archivedChats: newArchived };
+          return {
+            chats: newChats,
+            activeChatId: newActiveId,
+            archivedChats: newArchived,
+          };
         });
         resolve();
       } catch (err) {
