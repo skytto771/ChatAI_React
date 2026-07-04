@@ -199,6 +199,7 @@
 
 /* --- 代码块 --- */
 .md-body pre {
+  position: relative;
   margin: 1em 0;
   padding: 1.1em 1.3em;
   background: var(--code-block-bg);
@@ -224,13 +225,52 @@
   content: attr(data-lang);
   position: absolute;
   top: 0.4em;
-  right: 1em;
+  right: 3.2em;
   font-size: 0.7em;
   color: var(--text-secondary);
   opacity: 0.5;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   pointer-events: none;
+}
+
+/* 代码块复制按钮 */
+.md-body .code-copy-btn {
+  position: absolute;
+  top: 0.4em;
+  right: 0.6em;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-size: 0.7em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  z-index: 1;
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.md-body pre:hover .code-copy-btn {
+  opacity: 1;
+}
+
+/* 复制成功状态 */
+.md-body .code-copy-btn.copied {
+  opacity: 1;
+  color: var(--success, #52c41a);
 }
 
 /* --- 表格 --- */

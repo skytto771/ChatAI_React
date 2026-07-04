@@ -29,6 +29,8 @@ const api = {
     updateConversation: "/conversation/updateConversation",
     delConversation: "/conversation/delConversation",
     archived: "/conversation/archived",
+    archiveConversation: "/conversation/archiveConversation",
+    unarchiveConversation: "/conversation/unarchiveConversation",
     toggleTop: "/conversation/toggleTop",
   },
   message: {

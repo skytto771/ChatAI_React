@@ -362,3 +362,90 @@
   white-space: nowrap;
   font-size: 0.65rem;
 }
+
+.archivedSection {
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.archivedToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--hover);
+    color: var(--text-primary);
+  }
+}
+
+.archivedArrow {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+
+  &[data-open="true"] {
+    transform: rotate(90deg);
+  }
+}
+
+.archivedList {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.archivedItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--hover);
+  }
+}
+
+.archivedTitle {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.restoreBtn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.15);
+  }
+}
+
+.archivedEmpty {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  font-size: 0.8rem;
+}

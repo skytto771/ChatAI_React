@@ -28,6 +28,7 @@ export interface Chat {
   settings: chatSettings;
   model: string; // 模型标识，如 'gpt-3.5-turbo'
   isTop: boolean;
+  isArchived: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -69,6 +70,7 @@ export interface chatSettings {
 
 export interface ChatState {
   chats: Chat[];
+  archivedChats: Chat[];
   activeChatId: string;
   isResponding: boolean;
 }

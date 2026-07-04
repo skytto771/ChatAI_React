@@ -9,8 +9,11 @@ interface updateSettings extends chatSettings {
 }
 
 interface ChatStore extends ChatState {
+  archivedChats: Chat[];
   settings: chatSettings;
   loadChats: () => Promise<void>;
+  loadArchivedChats: () => Promise<void>;
+  restoreChat: (chatId: string) => Promise<void>;
   loadCurMessages: (
     chatId: string,
   ) => Promise<{ status: "generating" | "completed"; messageId?: string }>;
@@ -42,6 +45,7 @@ interface ChatStore extends ChatState {
 
 export const useChatStore = create<ChatStore>((set, _get) => ({
   chats: [],
+  archivedChats: [],
   activeChatId: "",
   isResponding: false,
   settings: {},
@@ -53,7 +57,9 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
       let hasId = false;
 
       try {
-        const res = await http.post(api.conversation.getConversationList, {});
+        const res = await http.post(api.conversation.getConversationList, {
+          isArchived: "false",
+        });
         const resd = res.data;
         const chats = resd.rows.map((c: any) => {
           if (c.id === actConversationId) {
@@ -62,6 +68,43 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
           return c;
         });
         set({ chats, activeChatId: hasId ? actConversationId : "" });
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+
+  loadArchivedChats: async () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await http.post(api.conversation.getConversationList, {
+          isArchived: "true",
+        });
+        const resd = res.data;
+        set({ archivedChats: resd.rows });
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+
+  restoreChat: async (chatId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await http.post(api.conversation.unarchiveConversation, { id: chatId });
+        set((state) => {
+          const restored = state.archivedChats.find((c) => c.id === chatId);
+          const newArchived = state.archivedChats.filter((c) => c.id !== chatId);
+          if (restored) {
+            return {
+              archivedChats: newArchived,
+              chats: [restored, ...state.chats],
+            };
+          }
+          return { archivedChats: newArchived };
+        });
         resolve();
       } catch (err) {
         reject(err);
@@ -277,9 +320,13 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
         await http.post(api.conversation.delConversation, { id: chatId });
         set((state) => {
           const newChats = state.chats.filter((c) => c.id !== chatId);
+          const archivedChat = state.chats.find((c) => c.id === chatId);
           const newActiveId = newChats.length > 0 ? newChats[0].id : "";
           localStorage.setItem("ai-chats", JSON.stringify(newChats));
-          return { chats: newChats, activeChatId: newActiveId };
+          const newArchived = archivedChat
+            ? [{ ...archivedChat, isArchived: true }, ...state.archivedChats]
+            : state.archivedChats;
+          return { chats: newChats, activeChatId: newActiveId, archivedChats: newArchived };
         });
         resolve();
       } catch (err) {

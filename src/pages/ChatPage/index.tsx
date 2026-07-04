@@ -17,9 +17,12 @@ import MessageNav from "./components/MessageNav";
 const Chat: React.FC = () => {
   const {
     chats,
+    archivedChats,
     activeChatId,
     isResponding,
     loadChats,
+    loadArchivedChats,
+    restoreChat,
     loadCurMessages,
     addMessage,
     generateAiReply,
@@ -169,14 +172,14 @@ const Chat: React.FC = () => {
     [activeChatId, isResponding],
   );
 
-  // 删除对话
+  // 归档对话
   const handleDeleteChat = async (chatId: string) => {
     try {
       await deleteChat(chatId);
       if (activeChatId === chatId) {
         setActiveChatId("");
       }
-      toast.success("删除成功");
+      toast.success("归档成功");
     } catch (err: any) {
       toast.error(err?.message || String(err));
     }
@@ -213,6 +216,7 @@ const Chat: React.FC = () => {
     <div className={styles.chat}>
       <ChatSidebar
         chats={chats}
+        archivedChats={archivedChats}
         activeChatId={activeChatId}
         onNewChat={() => handleSelectChat("")}
         onSelectChat={handleSelectChat}
@@ -222,6 +226,8 @@ const Chat: React.FC = () => {
         onOpenChatSettings={openChatSettings}
         onLogout={handleLogout}
         onToggleTop={(chatId, isTop) => toggleChatTop(chatId, isTop)}
+        onLoadArchivedChats={loadArchivedChats}
+        onRestoreChat={restoreChat}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />

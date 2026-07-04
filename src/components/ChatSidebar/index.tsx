@@ -7,6 +7,7 @@ import ConfirmModal from "../ConfirmModel";
 
 interface ChatSidebarProps {
   chats: Chat[];
+  archivedChats: Chat[];
   activeChatId: string;
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
@@ -15,6 +16,8 @@ interface ChatSidebarProps {
   onLogout: () => void;
   onDeleteChat: (chatId: string) => Promise<void>;
   onToggleTop: (chatId: string, isTop: boolean) => Promise<void>;
+  onLoadArchivedChats: () => Promise<void>;
+  onRestoreChat: (chatId: string) => Promise<void>;
   isOpen: boolean;
   onClose: () => void;
   onRenameChat: (chatId: string, newTitle: string) => Promise<void>;
@@ -22,6 +25,7 @@ interface ChatSidebarProps {
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
   chats,
+  archivedChats,
   activeChatId,
   onNewChat,
   onSelectChat,
@@ -31,6 +35,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onLogout,
   onDeleteChat,
   onToggleTop,
+  onLoadArchivedChats,
+  onRestoreChat,
   isOpen,
   onClose,
 }) => {
@@ -43,6 +49,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const [editTitle, setEditTitle] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const toggleChatMenu = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
@@ -75,12 +82,35 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       try {
         await onDeleteChat(selectedChatId);
         setSelectedChatId("");
+        toast.success("已归档");
       } catch (err: any) {
         toast.error(err?.message || String(err));
       }
     }
     closeAllPopups();
     setShowConfirm(false);
+  };
+
+  const handleToggleArchived = async () => {
+    if (!showArchived) {
+      try {
+        await onLoadArchivedChats();
+      } catch (err: any) {
+        toast.error(err?.message || String(err));
+        return;
+      }
+    }
+    setShowArchived(!showArchived);
+  };
+
+  const handleRestoreChat = async (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    try {
+      await onRestoreChat(chatId);
+      toast.success("已恢复");
+    } catch (err: any) {
+      toast.error(err?.message || String(err));
+    }
   };
 
   const handleStartRename = (e: React.MouseEvent, chat: Chat) => {
@@ -271,6 +301,39 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             </div>
           ))}
         </div>
+        <div className={styles.archivedSection}>
+          <button
+            className={styles.archivedToggle}
+            onClick={handleToggleArchived}
+          >
+            <span>📦 已归档</span>
+            <span className={styles.archivedArrow} data-open={showArchived}>
+              ▶
+            </span>
+          </button>
+          {showArchived && (
+            <div className={styles.archivedList}>
+              {archivedChats.length === 0 ? (
+                <div className={styles.archivedEmpty}>暂无归档会话</div>
+              ) : (
+                archivedChats.map((chat) => (
+                  <div key={chat.id} className={styles.archivedItem}>
+                    <span className={styles.archivedTitle} title={chat.title}>
+                      {chat.title}
+                    </span>
+                    <button
+                      className={styles.restoreBtn}
+                      onClick={(e) => handleRestoreChat(e, chat.id)}
+                      title="恢复会话"
+                    >
+                      ↩
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         <div className={styles.sidebarFooter}>
           <UserProfile onOpenSettings={onOpenSettings} onLogout={onLogout} />
         </div>
@@ -278,9 +341,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       {isOpen && <div className={styles.overlay} onClick={onClose} />}
       <ConfirmModal
         isOpen={showConfirm}
-        title="删除对话"
-        message="确定要删除当前对话吗？此操作不可恢复。"
-        confirmText="删除"
+        title="归档对话"
+        message="确定要归档当前对话吗？可在侧边栏「已归档」中恢复。"
+        confirmText="归档"
         cancelText="取消"
         onConfirm={handleDeleteChat}
         onCancel={() => setShowConfirm(false)}
