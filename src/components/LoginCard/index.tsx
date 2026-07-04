@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./index.module.scss";
+import { StarIcon } from "@/components/Icons";
 import LoginForm from "./components/Form/LoginForm.tsx";
 import RegisterForm from "./components/Form/RegisterForm";
 // import SocialButtons from './components/SocialButtons';
@@ -35,14 +36,7 @@ const LoginCard = () => {
       <div className={styles.loginCard}>
         <div className={styles.logoArea}>
           <div className={styles.aiIcon}>
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
-                fill="white"
-                opacity="0.95"
-              />
-              <circle cx="12" cy="19" r="1.8" fill="white" opacity="0.7" />
-            </svg>
+            <StarIcon />
           </div>
           <span className={styles.brandText}>星语</span>
         </div>

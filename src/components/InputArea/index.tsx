@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import type { chatSettings, Chat } from "@/types";
 import styles from "./index.module.scss";
+import { SendIcon } from "@/components/Icons";
 
 interface updateSettings extends chatSettings {
   conversationId: string;
@@ -100,17 +101,7 @@ const InputArea: React.FC<InputAreaProps> = ({
             disabled={disabled}
             title="发送消息"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-            >
-              <path d="M22 2L11 13" />
-              <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-            </svg>
+            <SendIcon size={20} stroke="white" strokeWidth="2.5" />
           </button>
         </div>
       </div>

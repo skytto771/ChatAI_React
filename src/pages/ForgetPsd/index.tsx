@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import ParticlesBackground from "../../components/ParticlesBackground";
 import styles from "./index.module.scss";
+import { StarIcon, EmailIcon, LockIcon } from "@/components/Icons";
 import api from "@/api";
 import { http, isValidEmail } from "@/utils";
 import { useToast } from "@/context/ToastContext";
@@ -94,14 +95,7 @@ function ForgetPsd() {
         {/* Logo */}
         <div className={styles.logoArea}>
           <div className={styles.aiIcon}>
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
-                fill="white"
-                opacity="0.95"
-              />
-              <circle cx="12" cy="19" r="1.8" fill="white" opacity="0.7" />
-            </svg>
+            <StarIcon />
           </div>
           <span className={styles.brandText}>星语</span>
         </div>
@@ -118,16 +112,7 @@ function ForgetPsd() {
             <div className={styles.inputGroup}>
               <label>邮箱</label>
               <div className={styles.inputWrapper}>
-                <svg
-                  className={styles.iconPrefix}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="3" />
-                  <path d="M2 6l10 7 10-7" />
-                </svg>
+                <EmailIcon className={styles.iconPrefix} />
                 <input
                   type="email"
                   placeholder="your@email.com"
@@ -184,17 +169,7 @@ function ForgetPsd() {
             <div className={styles.inputGroup}>
               <label>新密码</label>
               <div className={styles.inputWrapper}>
-                <svg
-                  className={styles.iconPrefix}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="3" />
-                  <circle cx="12" cy="16" r="1.5" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
+                <LockIcon className={styles.iconPrefix} />
                 <input
                   type="password"
                   placeholder="6-20位新密码"
@@ -207,17 +182,7 @@ function ForgetPsd() {
             <div className={styles.inputGroup}>
               <label>确认密码</label>
               <div className={styles.inputWrapper}>
-                <svg
-                  className={styles.iconPrefix}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="3" />
-                  <circle cx="12" cy="16" r="1.5" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
+                <LockIcon className={styles.iconPrefix} />
                 <input
                   type="password"
                   placeholder="请再次输入新密码"
