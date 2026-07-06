@@ -7,7 +7,7 @@ import { useUserStore } from "@/store";
 
 function App() {
   const userStore = useUserStore();
-
+  
   useEffect(() => {
     const auth = session.getSession();
     if (auth?.userId) {

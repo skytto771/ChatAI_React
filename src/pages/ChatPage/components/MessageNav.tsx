@@ -1,5 +1,5 @@
 // MessageNav.tsx
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './MessageNav.module.scss';
 
 interface MessageNavProps {
@@ -47,4 +47,4 @@ const MessageNav: React.FC<MessageNavProps> = ({ onSelect, messages }) => {
     );
 };
 
-export default MessageNav;
+export default React.memo(MessageNav);

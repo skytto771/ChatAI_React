@@ -14,10 +14,12 @@ interface ChatSidebarProps {
   onOpenSettings: () => void;
   onOpenChatSettings: (chatId: string) => void;
   onLogout: () => void;
-  onDeleteChat: (chatId: string) => Promise<void>;
+  onArchiveChat: (chatId: string) => Promise<void>;
   onToggleTop: (chatId: string, isTop: boolean) => Promise<void>;
   onLoadArchivedChats: () => Promise<void>;
   onRestoreChat: (chatId: string) => Promise<void>;
+  onDeleteArchivedChat: (chatId: string) => Promise<void>;
+  onClearArchivedChats: () => Promise<void>;
   isOpen: boolean;
   onClose: () => void;
   onRenameChat: (chatId: string, newTitle: string) => Promise<void>;
@@ -33,10 +35,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onOpenChatSettings,
   onRenameChat,
   onLogout,
-  onDeleteChat,
+  onArchiveChat,
   onToggleTop,
   onLoadArchivedChats,
   onRestoreChat,
+  onDeleteArchivedChat,
+  onClearArchivedChats,
   isOpen,
   onClose,
 }) => {
@@ -50,6 +54,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const editInputRef = useRef<HTMLInputElement>(null);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [showArchivedConfirm, setShowArchivedConfirm] = useState(false);
+  const [archivedConfirmType, setArchivedConfirmType] = useState<"delete" | "clear">("delete");
+  const [archivedConfirmChatId, setArchivedConfirmChatId] = useState<string | null>(null);
 
   const toggleChatMenu = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
@@ -71,16 +78,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  const openDeleteChat = (e: React.MouseEvent, chatId: string) => {
+  const openArchiveChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     setShowConfirm(true);
     setSelectedChatId(chatId);
   };
 
-  const handleDeleteChat = async () => {
+  const handleArchiveChat = async () => {
     if (selectedChatId) {
       try {
-        await onDeleteChat(selectedChatId);
+        await onArchiveChat(selectedChatId);
         setSelectedChatId("");
         toast.success("已归档");
       } catch (err: any) {
@@ -111,6 +118,39 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     } catch (err: any) {
       toast.error(err?.message || String(err));
     }
+  };
+
+  const openDeleteArchivedChat = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    setArchivedConfirmType("delete");
+    setArchivedConfirmChatId(chatId);
+    setShowArchivedConfirm(true);
+  };
+
+  const openClearArchivedChats = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setArchivedConfirmType("clear");
+    setShowArchivedConfirm(true);
+  };
+
+  const handleArchivedConfirm = async () => {
+    if (archivedConfirmType === "delete" && archivedConfirmChatId) {
+      try {
+        await onDeleteArchivedChat(archivedConfirmChatId);
+        toast.success("已删除");
+      } catch (err: any) {
+        toast.error(err?.message || String(err));
+      }
+    } else if (archivedConfirmType === "clear") {
+      try {
+        await onClearArchivedChats();
+        toast.success("已清空归档");
+      } catch (err: any) {
+        toast.error(err?.message || String(err));
+      }
+    }
+    setShowArchivedConfirm(false);
+    setArchivedConfirmChatId(null);
   };
 
   const handleStartRename = (e: React.MouseEvent, chat: Chat) => {
@@ -240,9 +280,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       </button>
       <button
         className={`${styles.chatPopupItem} ${styles.danger}`}
-        onClick={(e) => openDeleteChat(e, chat.id)}
+        onClick={(e) => openArchiveChat(e, chat.id)}
       >
-        <span className={styles.menuIcon}>🗑️</span> 删除会话
+        <span className={styles.menuIcon}>📦</span> 归档
       </button>
     </div>
   );
@@ -307,9 +347,20 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             onClick={handleToggleArchived}
           >
             <span>📦 已归档</span>
-            <span className={styles.archivedArrow} data-open={showArchived}>
-              ▶
-            </span>
+            <div className={styles.archivedToggleRight}>
+              {showArchived && archivedChats.length > 0 && (
+                <span
+                  className={styles.clearArchivedBtn}
+                  onClick={openClearArchivedChats}
+                  title="清空归档"
+                >
+                  🗑
+                </span>
+              )}
+              <span className={styles.archivedArrow} data-open={showArchived}>
+                ▶
+              </span>
+            </div>
           </button>
           {showArchived && (
             <div className={styles.archivedList}>
@@ -321,13 +372,22 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <span className={styles.archivedTitle} title={chat.title}>
                       {chat.title}
                     </span>
-                    <button
-                      className={styles.restoreBtn}
-                      onClick={(e) => handleRestoreChat(e, chat.id)}
-                      title="恢复会话"
-                    >
-                      ↩
-                    </button>
+                    <div className={styles.archivedActions}>
+                      <button
+                        className={styles.deleteArchivedBtn}
+                        onClick={(e) => openDeleteArchivedChat(e, chat.id)}
+                        title="删除"
+                      >
+                        ✕
+                      </button>
+                      <button
+                        className={styles.restoreBtn}
+                        onClick={(e) => handleRestoreChat(e, chat.id)}
+                        title="恢复会话"
+                      >
+                        ↩
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -345,11 +405,28 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         message="确定要归档当前对话吗？可在侧边栏「已归档」中恢复。"
         confirmText="归档"
         cancelText="取消"
-        onConfirm={handleDeleteChat}
+        onConfirm={handleArchiveChat}
         onCancel={() => setShowConfirm(false)}
+      />
+      <ConfirmModal
+        isOpen={showArchivedConfirm}
+        title={archivedConfirmType === "delete" ? "删除归档对话" : "清空归档"}
+        message={
+          archivedConfirmType === "delete"
+            ? "确定要永久删除该归档对话吗？此操作不可恢复。"
+            : "确定要清空所有归档对话吗？此操作不可恢复。"
+        }
+        confirmText={archivedConfirmType === "delete" ? "删除" : "清空"}
+        cancelText="取消"
+        danger={true}
+        onConfirm={handleArchivedConfirm}
+        onCancel={() => {
+          setShowArchivedConfirm(false);
+          setArchivedConfirmChatId(null);
+        }}
       />
     </>
   );
 };
 
-export default ChatSidebar;
+export default React.memo(ChatSidebar);

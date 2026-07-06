@@ -35,12 +35,15 @@ interface ChatStore extends ChatState {
   updateChatTitle: (chatId: string, title: string) => Promise<void>;
   setActiveChatId: (id: string) => void;
   setIsResponding: (isResponding: boolean) => void;
-  deleteChat: (chatId: string) => Promise<void>;
+  archiveChat: (chatId: string) => Promise<void>;
+  deleteArchivedChat: (chatId: string) => Promise<void>;
+  clearArchivedChats: () => Promise<void>;
   toggleChatTop: (chatId: string, isTop: boolean) => Promise<void>;
   getChatModelSettings: (chatId: string) => Promise<chatSettings>;
   updateChatModelSettings: (config: updateSettings) => Promise<string>;
   updateUserModelSettings: (settings: chatSettings) => Promise<void>;
   loadModelSettings: () => Promise<void>;
+  initPage: () => Promise<{ status: "generating" | "completed"; messageId?: string; chatId: string }>;
 }
 
 export const useChatStore = create<ChatStore>((set, _get) => ({
@@ -316,7 +319,7 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
 
   setIsResponding: (isResponding) => set({ isResponding }),
 
-  deleteChat: async (chatId) => {
+  archiveChat: async (chatId) => {
     return new Promise(async (resolve, reject) => {
       try {
         await http.post(api.conversation.delConversation, { id: chatId });
@@ -334,6 +337,31 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
             archivedChats: newArchived,
           };
         });
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+  deleteArchivedChat: async (chatId) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await http.post(api.conversation.archivedDel, { id: chatId });
+        set((state) => ({
+          archivedChats: state.archivedChats.filter((c) => c.id !== chatId),
+        }));
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+
+  clearArchivedChats: async () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await http.post(api.conversation.archivedAll, {});
+        set({ archivedChats: [] });
         resolve();
       } catch (err) {
         reject(err);
@@ -419,6 +447,55 @@ export const useChatStore = create<ChatStore>((set, _get) => ({
       }
     });
   },
+
+  initPage: async () => {
+    const actConversationId =
+      localStorage.getItem("activeConversationId") || "";
+
+    const [chatListRes, settingsRes] = await Promise.all([
+      http.post(api.conversation.getConversationList, {
+        isArchived: "false",
+      }),
+      http.post(api.modelSettings.getSettings, {}),
+    ]);
+
+    const chatRows: any[] = chatListRes.data.rows;
+    const hasId = chatRows.some((c: any) => c.id === actConversationId);
+    const activeChatId = hasId ? actConversationId : "";
+
+    let messageRows: any[] = [];
+    if (activeChatId) {
+      const msgRes = await http.post(api.message.getMessageList, {
+        conversationId: activeChatId,
+      });
+      messageRows = msgRes.data.rows;
+    }
+
+    let generatingMsgId: string | undefined;
+    set({
+      activeChatId,
+      settings: settingsRes.data,
+      chats: chatRows.map((c: any) => {
+        if (c.id === activeChatId) {
+          c.messages = messageRows.map((m: any) => {
+            if (m.role === "assistant") {
+              m.contentMd = marked.parse(m.content, { async: false });
+            }
+            if (m.status === "generating") {
+              generatingMsgId = m.id;
+            }
+            return m;
+          });
+        }
+        return c;
+      }),
+    });
+
+    if (generatingMsgId) {
+      return { status: "generating", messageId: generatingMsgId, chatId: activeChatId };
+    }
+    return { status: "completed", chatId: activeChatId };
+  },
 }));
 
 async function handleStreamResponse(
@@ -431,68 +508,40 @@ async function handleStreamResponse(
   const decoder = new TextDecoder();
 
   let contentBuffer = "";
-  let contentMd = "";
   let reasoningBuffer = "";
-  let parseSchedule = false;
-  let sseBuffer = ""; // 用于拼接不完整的 SSE 消息
+  let sseBuffer = "";
+  let lastMsgId = "";
+  let contentMdParsed = ""; // 最近一次 marked.parse 的结果
+  let parseTimer: ReturnType<typeof setTimeout> | null = null;
+  let rafId: ReturnType<typeof requestAnimationFrame> | null = null;
+  let dirty = false;
 
-  // 处理单条已解析的消息
-  function handleChunk(chunk: any) {
-    const { type, content, messageId: msgId } = chunk;
+  // --- 每帧最多调用一次 set()，合并累积的 buffer ---
+  function flushSet() {
+    rafId = null;
+    dirty = false;
+    const id = lastMsgId;
+    const parsed = contentMdParsed;
+    const raw = contentBuffer;
+    const reasoning = reasoningBuffer;
 
-    if (type === "reasoning_content") {
-      reasoningBuffer += content;
-      setMessage(msgId, type, reasoningBuffer);
-    } else if (type === "content") {
-      contentBuffer += content;
-      contentMd += content;
-      if (!parseSchedule) {
-        parseSchedule = true;
-        setTimeout(() => {
-          contentMd = marked.parse(contentBuffer, { async: false });
-          parseSchedule = false;
-        }, 500);
-      }
-      setMessage(msgId, type, contentMd, contentBuffer);
-    } else if (type === "finish") {
-      setMessage(msgId, type); // 只需要更新状态，不需要内容
-    }
-  }
-
-  // 更新zustand状态
-  function setMessage(
-    id: string,
-    type: string,
-    displayContent?: string,
-    originalContent?: string,
-  ) {
     set((state: any) => {
       const chats = state.chats.map((c: any) => {
         if (c.id === chatId) {
           const message = c.messages.find((m: any) => m.id === id);
           if (message) {
-            switch (type) {
-              case "reasoning_content":
-                message.reasoning = displayContent;
-                break;
-              case "content":
-                message.content = originalContent;
-                message.contentMd = displayContent;
-                break;
-              case "finish":
-                message.status = "completed";
-                break;
-            }
+            message.content = raw;
+            message.contentMd = parsed;
+            message.reasoning = reasoning;
           } else {
-            // 新消息（例如 generateAiReply 首次创建）
             c.messages.push({
               role: "assistant",
-              content: type === "content" ? contentBuffer : "",
-              contentMd: type === "content" ? contentMd : "",
-              reasoning: type === "reasoning_content" ? reasoningBuffer : "",
-              id: id,
+              content: raw,
+              contentMd: parsed,
+              reasoning,
+              id,
               tokensUsed: 0,
-              status: type === "finish" ? "completed" : "generating",
+              status: "generating",
             });
           }
         }
@@ -502,13 +551,75 @@ async function handleStreamResponse(
     });
   }
 
-  // 流读取循环
+  function scheduleFlush() {
+    if (rafId !== null) return; // 已有待处理的 RAF
+    dirty = true;
+    rafId = requestAnimationFrame(() => {
+      if (dirty) flushSet();
+    });
+  }
+
+  // --- Markdown 解析定时器（500ms 间隔解析，避免高频 marked.parse） ---
+  function scheduleMarked() {
+    if (parseTimer !== null) return;
+    parseTimer = setTimeout(() => {
+      parseTimer = null;
+      contentMdParsed = marked.parse(contentBuffer, { async: false }) as string;
+      scheduleFlush(); // 解析完成后推一帧
+    }, 500);
+  }
+
+  function handleChunk(chunk: any) {
+    const { type, content, messageId: msgId } = chunk;
+    lastMsgId = msgId;
+
+    if (type === "reasoning_content") {
+      reasoningBuffer += content;
+      scheduleFlush();
+    } else if (type === "content") {
+      contentBuffer += content;
+      // 实时预览：直接用原始文本（无 Markdown），解析的版本通过定时器异步更新
+      contentMdParsed = contentBuffer;
+      scheduleMarked();
+      scheduleFlush();
+    } else if (type === "finish") {
+      // 最终解析
+      if (parseTimer !== null) {
+        clearTimeout(parseTimer);
+        parseTimer = null;
+      }
+      contentMdParsed = marked.parse(contentBuffer, { async: false }) as string;
+      // finish 需要立即 set status
+      rafId = null; // 取消待处理的 RAF
+      dirty = false;
+      const id = msgId;
+      const parsed = contentMdParsed;
+      const raw = contentBuffer;
+      const reasoning = reasoningBuffer;
+      set((state: any) => {
+        const chats = state.chats.map((c: any) => {
+          if (c.id === chatId) {
+            const message = c.messages.find((m: any) => m.id === id);
+            if (message) {
+              message.content = raw;
+              message.contentMd = parsed;
+              message.reasoning = reasoning;
+              message.status = "completed";
+            }
+          }
+          return c;
+        });
+        return { chats };
+      });
+    }
+  }
+
+  // --- 流读取循环 ---
   while (true) {
     const { done, value } = await reader.read();
     const text = decoder.decode(value, { stream: !done });
     sseBuffer += text;
 
-    // 按 SSE 双换行分割，保留最后一个不完整片段
     const parts = sseBuffer.split("\n\n");
     sseBuffer = parts.pop() || "";
 
@@ -524,7 +635,6 @@ async function handleStreamResponse(
     }
 
     if (done) {
-      // 处理可能残留的最后一条消息
       if (sseBuffer.trim()) {
         try {
           const messageChunk = JSON.parse(sseBuffer.trim());
@@ -533,10 +643,17 @@ async function handleStreamResponse(
           console.error("Final chunk parse error:", err);
         }
       }
-      // 强制最后一次 Markdown 解析并退出
-      parseSchedule = true;
-      contentMd = marked.parse(contentBuffer, { async: false });
-      parseSchedule = false;
+      // 确保最终一帧被推送
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (parseTimer !== null) {
+        clearTimeout(parseTimer);
+        parseTimer = null;
+      }
+      contentMdParsed = marked.parse(contentBuffer, { async: false }) as string;
+      if (dirty) flushSet();
       resolve();
       break;
     }

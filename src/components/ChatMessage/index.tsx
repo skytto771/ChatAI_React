@@ -1,4 +1,4 @@
-import {
+import React, {
   forwardRef,
   useRef,
   useState,
@@ -280,4 +280,4 @@ const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
 
 ChatMessage.displayName = "ChatMessage";
 
-export default ChatMessage;
+export default React.memo(ChatMessage);

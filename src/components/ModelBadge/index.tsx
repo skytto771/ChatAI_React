@@ -14,4 +14,4 @@ const ModelBadge: React.FC<ModelBadgeProps> = ({ model }) => {
     );
 };
 
-export default ModelBadge;
+export default React.memo(ModelBadge);

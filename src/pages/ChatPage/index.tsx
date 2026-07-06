@@ -15,15 +15,17 @@ import type { chatSettings } from "@/types";
 import MessageNav from "./components/MessageNav";
 
 const Chat: React.FC = () => {
+  // 精确 selector 订阅 —— 仅在关心的数据变化时重渲染
+  const chats = useChatStore((s) => s.chats);
+  const archivedChats = useChatStore((s) => s.archivedChats);
+  const activeChatId = useChatStore((s) => s.activeChatId);
+  const isResponding = useChatStore((s) => s.isResponding);
+
+  // actions 引用稳定，用 getState 一次性获取
   const {
-    chats,
-    archivedChats,
-    activeChatId,
-    isResponding,
-    loadChats,
+    initPage,
     loadArchivedChats,
     restoreChat,
-    loadCurMessages,
     addMessage,
     generateAiReply,
     reGenerateReply,
@@ -32,13 +34,14 @@ const Chat: React.FC = () => {
     resume,
     setActiveChatId,
     setIsResponding,
-    deleteChat,
+    archiveChat,
+    deleteArchivedChat,
+    clearArchivedChats,
     updateChatTitle,
     getChatModelSettings,
     updateChatModelSettings,
-    loadModelSettings,
     toggleChatTop,
-  } = useChatStore();
+  } = useChatStore.getState();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -59,26 +62,16 @@ const Chat: React.FC = () => {
 
   // 加载会话信息
   useEffect(() => {
-    loadChats().catch((err) => toast.error(err?.message || String(err)));
-    loadModelSettings();
-  }, [loadChats]);
-
-  // 加载聊天数据
-  useEffect(() => {
-    if (activeChatId) {
-      loadCurMessages(activeChatId)
-        .then((res) => {
-          scrollToBottom();
-          if (res.status === "generating") {
-            setIsResponding(true);
-            resume(activeChatId, res.messageId!);
-          }
-        })
-        .catch((err) => {
-          toast.error(err?.message || String(err));
-        });
-    }
-  }, [activeChatId]);
+    initPage()
+      .then((res) => {
+        scrollToBottom();
+        if (res.status === "generating") {
+          setIsResponding(true);
+          resume(res.chatId, res.messageId!);
+        }
+      })
+      .catch((err) => toast.error(err?.message || String(err)));
+  }, []);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -173,16 +166,25 @@ const Chat: React.FC = () => {
   );
 
   // 归档对话
-  const handleDeleteChat = async (chatId: string) => {
+  const handleArchiveChat = async (chatId: string) => {
     try {
-      await deleteChat(chatId);
+      await archiveChat(chatId);
       if (activeChatId === chatId) {
         setActiveChatId("");
       }
-      toast.success("归档成功");
     } catch (err: any) {
       toast.error(err?.message || String(err));
     }
+  };
+
+  // 删除单个归档对话
+  const handleDeleteArchivedChat = async (chatId: string) => {
+    await deleteArchivedChat(chatId);
+  };
+
+  // 清空所有归档对话
+  const handleClearArchivedChats = async () => {
+    await clearArchivedChats();
   };
 
   // 切换对话
@@ -195,10 +197,27 @@ const Chat: React.FC = () => {
     [isResponding, setIsResponding, setActiveChatId],
   );
 
-  const scrollToMsg = (id: string) => {
+  // useCallback 保证 ChatMessage / MessageNav React.memo 生效
+  const handleEditMessage = useCallback(
+    (messageId: string, newText: string) => {
+      const id = useChatStore.getState().activeChatId;
+      editMessage(id, messageId, newText);
+    },
+    [editMessage],
+  );
+
+  const handleRegenerateMessage = useCallback(
+    (messageId: string) => {
+      const id = useChatStore.getState().activeChatId;
+      reGenerateReply(id, messageId);
+    },
+    [reGenerateReply],
+  );
+
+  const scrollToMsg = useCallback((id: string) => {
     const el = userMsgEleMap.current.get(id);
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  }, []);
 
   // 登出
   const handleLogout = async () => {
@@ -211,6 +230,7 @@ const Chat: React.FC = () => {
     setSelectChat({ conversationId: chatId, ...resDate });
     setIsEditChatModalOpen(true);
   };
+  
 
   return (
     <div className={styles.chat}>
@@ -220,7 +240,7 @@ const Chat: React.FC = () => {
         activeChatId={activeChatId}
         onNewChat={() => handleSelectChat("")}
         onSelectChat={handleSelectChat}
-        onDeleteChat={handleDeleteChat}
+        onArchiveChat={handleArchiveChat}
         onRenameChat={updateChatTitle}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenChatSettings={openChatSettings}
@@ -228,6 +248,8 @@ const Chat: React.FC = () => {
         onToggleTop={(chatId, isTop) => toggleChatTop(chatId, isTop)}
         onLoadArchivedChats={loadArchivedChats}
         onRestoreChat={restoreChat}
+        onDeleteArchivedChat={handleDeleteArchivedChat}
+        onClearArchivedChats={handleClearArchivedChats}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
@@ -265,11 +287,9 @@ const Chat: React.FC = () => {
                     isResponse={
                       activeChatLastMessage?.id === message.id && isResponding
                     }
-                    onEdit={(messageId, newText) =>
-                      editMessage(activeChatId, messageId, newText)
-                    }
+                    onEdit={handleEditMessage}
                     onRegenerate={() =>
-                      reGenerateReply(activeChatId, message.id)
+                      handleRegenerateMessage(message.id)
                     }
                   />
                 ))}
@@ -299,4 +319,4 @@ const Chat: React.FC = () => {
   );
 };
 
-export default Chat;
+export default React.memo(Chat);

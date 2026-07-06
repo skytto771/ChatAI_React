@@ -109,4 +109,4 @@ const InputArea: React.FC<InputAreaProps> = ({
   );
 };
 
-export default InputArea;
+export default React.memo(InputArea);
