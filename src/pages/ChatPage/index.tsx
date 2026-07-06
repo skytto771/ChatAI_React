@@ -24,7 +24,6 @@ const Chat: React.FC = () => {
   // actions 引用稳定，用 getState 一次性获取
   const {
     initPage,
-    loadCurMessages,
     loadArchivedChats,
     restoreChat,
     addMessage,
@@ -82,8 +81,8 @@ const Chat: React.FC = () => {
     const chat = store.chats.find((c: any) => c.id === activeChatId);
     if (chat?.messages?.length) {
       forceScrollToBottom();
-      return
-    };
+      return;
+    }
     store
       .loadCurMessages(activeChatId)
       .then((res) => {
@@ -120,14 +119,19 @@ const Chat: React.FC = () => {
       const container = messagesContainerRef.current;
       if (container) {
         isAutoScrollingRef.current = true;
-        container.scrollTo({ top: container.scrollHeight, behavior: "instant" });
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "instant",
+        });
         isAutoScrollingRef.current = false;
       }
     }, 0);
   }
 
   // RAF 节流的自动跟底（流式期间每帧最多 1 次）
-  const scrollRafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+  const scrollRafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(
+    null,
+  );
   const scrollToBottom = useCallback(() => {
     if (scrollRafRef.current !== null) return;
     scrollRafRef.current = requestAnimationFrame(() => {
@@ -135,7 +139,10 @@ const Chat: React.FC = () => {
       const container = messagesContainerRef.current;
       if (container && !userScrolledUpRef.current) {
         isAutoScrollingRef.current = true;
-        container.scrollTo({ top: container.scrollHeight, behavior: "instant" });
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "instant",
+        });
         isAutoScrollingRef.current = false;
       }
     });
@@ -146,7 +153,13 @@ const Chat: React.FC = () => {
     if (isResponding && !userScrolledUpRef.current) {
       scrollToBottom();
     }
-  }, [isResponding, messages.length, activeChatLastMessage?.content, activeChatLastMessage?.reasoning, scrollToBottom]);
+  }, [
+    isResponding,
+    messages.length,
+    activeChatLastMessage?.content,
+    activeChatLastMessage?.reasoning,
+    scrollToBottom,
+  ]);
 
   const setRef = useCallback(
     (id: string) => (node: HTMLDivElement | null) => {
@@ -269,7 +282,6 @@ const Chat: React.FC = () => {
     setSelectChat({ conversationId: chatId, ...resDate });
     setIsEditChatModalOpen(true);
   };
-  
 
   return (
     <div className={styles.chat}>
