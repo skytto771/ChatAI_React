@@ -17,7 +17,7 @@ interface ChatMessageProps {
   htmlText?: string;
   isResponse: boolean;
   onEdit?: (messageId: string, text: string) => void;
-  onRegenerate?: () => void;
+  onRegenerate?: (messageId: string) => void;
 }
 
 const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
@@ -143,7 +143,7 @@ const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
 
     const handleRegenerate = () => {
       if (!onRegenerate) return;
-      onRegenerate();
+      onRegenerate(messageId);
     };
 
     // 工具栏按钮配置

@@ -24,6 +24,7 @@ const Chat: React.FC = () => {
   // actions 引用稳定，用 getState 一次性获取
   const {
     initPage,
+    loadCurMessages,
     loadArchivedChats,
     restoreChat,
     addMessage,
@@ -56,15 +57,16 @@ const Chat: React.FC = () => {
   const activeChatLastMessage = messages[messages.length - 1];
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const isNearBottomRef = useRef(true); // 标记用户是否靠近底部
+  const userScrolledUpRef = useRef(false); // 用户主动向上滚 → 停止自动跟底
+  const isAutoScrollingRef = useRef(false); // 标记本次滚动是程序触发，非用户操作
 
   const userMsgEleMap = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // 加载会话信息
+  // 加载会话信息（首次进入）
   useEffect(() => {
     initPage()
       .then((res) => {
-        scrollToBottom();
+        forceScrollToBottom();
         if (res.status === "generating") {
           setIsResponding(true);
           resume(res.chatId, res.messageId!);
@@ -73,41 +75,78 @@ const Chat: React.FC = () => {
       .catch((err) => toast.error(err?.message || String(err)));
   }, []);
 
+  // 切换对话时加载消息（仅首次切换到该对话时触发）
+  useEffect(() => {
+    if (!activeChatId) return;
+    const store = useChatStore.getState();
+    const chat = store.chats.find((c: any) => c.id === activeChatId);
+    if (chat?.messages?.length) {
+      forceScrollToBottom();
+      return
+    };
+    store
+      .loadCurMessages(activeChatId)
+      .then((res) => {
+        forceScrollToBottom();
+        if (res.status === "generating") {
+          setIsResponding(true);
+          store.resume(activeChatId, res.messageId!);
+        }
+      })
+      .catch((err) => toast.error(err?.message || String(err)));
+  }, [activeChatId]);
+
+  // scroll 事件监听 — 区分用户滚动 vs 程序滚动
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
+    userScrolledUpRef.current = false;
 
-    const threshold = 120;
     const handleScroll = () => {
+      if (isAutoScrollingRef.current) return; // 程序触发的滚动，忽略
       const { scrollTop, scrollHeight, clientHeight } = container;
-      isNearBottomRef.current =
-        scrollHeight - scrollTop - clientHeight < threshold;
+      const atBottom = scrollHeight - scrollTop - clientHeight < 2;
+      userScrolledUpRef.current = !atBottom; // 离开底部 = 用户滚走了
     };
-
-    if (isResponding && isNearBottomRef.current) {
-      scrollToBottom();
-    }
 
     container.addEventListener("scroll", handleScroll);
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, [
-    activeChatId,
-    isResponding,
-    messages.length,
-    activeChatLastMessage?.content,
-    activeChatLastMessage?.reasoning,
-  ]);
-  function scrollToBottom() {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: "instant",
-      });
-    }
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [activeChatId]);
+
+  // 强制滚底（发送消息、切换对话等一次性操作）
+  function forceScrollToBottom() {
+    userScrolledUpRef.current = false;
+    setTimeout(() => {
+      const container = messagesContainerRef.current;
+      if (container) {
+        isAutoScrollingRef.current = true;
+        container.scrollTo({ top: container.scrollHeight, behavior: "instant" });
+        isAutoScrollingRef.current = false;
+      }
+    }, 0);
   }
+
+  // RAF 节流的自动跟底（流式期间每帧最多 1 次）
+  const scrollRafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+  const scrollToBottom = useCallback(() => {
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const container = messagesContainerRef.current;
+      if (container && !userScrolledUpRef.current) {
+        isAutoScrollingRef.current = true;
+        container.scrollTo({ top: container.scrollHeight, behavior: "instant" });
+        isAutoScrollingRef.current = false;
+      }
+    });
+  }, []);
+
+  // 流式更新时自动跟底
+  useEffect(() => {
+    if (isResponding && !userScrolledUpRef.current) {
+      scrollToBottom();
+    }
+  }, [isResponding, messages.length, activeChatLastMessage?.content, activeChatLastMessage?.reasoning, scrollToBottom]);
 
   const setRef = useCallback(
     (id: string) => (node: HTMLDivElement | null) => {
@@ -156,7 +195,7 @@ const Chat: React.FC = () => {
       try {
         setIsResponding(true);
         await addMessage(activeChatId, "user", text, 0);
-        scrollToBottom();
+        forceScrollToBottom();
         await handleAIResponse(activeChatId);
       } catch (error: any) {
         toast.error(error?.message || String(error));
@@ -288,9 +327,7 @@ const Chat: React.FC = () => {
                       activeChatLastMessage?.id === message.id && isResponding
                     }
                     onEdit={handleEditMessage}
-                    onRegenerate={() =>
-                      handleRegenerateMessage(message.id)
-                    }
+                    onRegenerate={handleRegenerateMessage}
                   />
                 ))}
               </div>

@@ -511,17 +511,10 @@ async function handleStreamResponse(
   let reasoningBuffer = "";
   let sseBuffer = "";
   let lastMsgId = "";
-  let contentMdParsed = ""; // 最近一次 marked.parse 的结果
-  let parseTimer: ReturnType<typeof setTimeout> | null = null;
   let rafId: ReturnType<typeof requestAnimationFrame> | null = null;
   let dirty = false;
 
-  // --- 每帧最多调用一次 set()，合并累积的 buffer ---
-  function flushSet() {
-    rafId = null;
-    dirty = false;
-    const id = lastMsgId;
-    const parsed = contentMdParsed;
+  function writeMessage(id: string, extra?: { status?: string }) {
     const raw = contentBuffer;
     const reasoning = reasoningBuffer;
 
@@ -531,17 +524,18 @@ async function handleStreamResponse(
           const message = c.messages.find((m: any) => m.id === id);
           if (message) {
             message.content = raw;
-            message.contentMd = parsed;
+            message.contentMd = raw;
             message.reasoning = reasoning;
+            if (extra?.status) message.status = extra.status;
           } else {
             c.messages.push({
               role: "assistant",
               content: raw,
-              contentMd: parsed,
+              contentMd: raw,
               reasoning,
               id,
               tokensUsed: 0,
-              status: "generating",
+              status: extra?.status || "generating",
             });
           }
         }
@@ -551,22 +545,32 @@ async function handleStreamResponse(
     });
   }
 
-  function scheduleFlush() {
-    if (rafId !== null) return; // 已有待处理的 RAF
+  function scheduleParse(id: string) {
     dirty = true;
+    if (rafId !== null) return;
     rafId = requestAnimationFrame(() => {
-      if (dirty) flushSet();
+      rafId = null;
+      if (!dirty) return;
+      dirty = false;
+      const parsed = marked.parse(contentBuffer, { async: false }) as string;
+      const raw = contentBuffer;
+      const reasoning = reasoningBuffer;
+      const msgId = id;
+      set((state: any) => {
+        const chats = state.chats.map((c: any) => {
+          if (c.id === chatId) {
+            const message = c.messages.find((m: any) => m.id === msgId);
+            if (message) {
+              message.content = raw;
+              message.contentMd = parsed;
+              message.reasoning = reasoning;
+            }
+          }
+          return c;
+        });
+        return { chats };
+      });
     });
-  }
-
-  // --- Markdown 解析定时器（500ms 间隔解析，避免高频 marked.parse） ---
-  function scheduleMarked() {
-    if (parseTimer !== null) return;
-    parseTimer = setTimeout(() => {
-      parseTimer = null;
-      contentMdParsed = marked.parse(contentBuffer, { async: false }) as string;
-      scheduleFlush(); // 解析完成后推一帧
-    }, 500);
   }
 
   function handleChunk(chunk: any) {
@@ -575,31 +579,21 @@ async function handleStreamResponse(
 
     if (type === "reasoning_content") {
       reasoningBuffer += content;
-      scheduleFlush();
+      writeMessage(msgId);
     } else if (type === "content") {
       contentBuffer += content;
-      // 实时预览：直接用原始文本（无 Markdown），解析的版本通过定时器异步更新
-      contentMdParsed = contentBuffer;
-      scheduleMarked();
-      scheduleFlush();
+      writeMessage(msgId);       // 文字即时出现
+      scheduleParse(msgId);      // RAF 节流 marked.parse
     } else if (type === "finish") {
-      // 最终解析
-      if (parseTimer !== null) {
-        clearTimeout(parseTimer);
-        parseTimer = null;
-      }
-      contentMdParsed = marked.parse(contentBuffer, { async: false }) as string;
-      // finish 需要立即 set status
-      rafId = null; // 取消待处理的 RAF
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
       dirty = false;
-      const id = msgId;
-      const parsed = contentMdParsed;
+      const parsed = marked.parse(contentBuffer, { async: false }) as string;
       const raw = contentBuffer;
       const reasoning = reasoningBuffer;
       set((state: any) => {
         const chats = state.chats.map((c: any) => {
           if (c.id === chatId) {
-            const message = c.messages.find((m: any) => m.id === id);
+            const message = c.messages.find((m: any) => m.id === msgId);
             if (message) {
               message.content = raw;
               message.contentMd = parsed;
@@ -614,7 +608,6 @@ async function handleStreamResponse(
     }
   }
 
-  // --- 流读取循环 ---
   while (true) {
     const { done, value } = await reader.read();
     const text = decoder.decode(value, { stream: !done });
@@ -626,34 +619,34 @@ async function handleStreamResponse(
     for (const part of parts) {
       const trimmed = part.trim();
       if (!trimmed) continue;
-      try {
-        const messageChunk = JSON.parse(trimmed);
-        handleChunk(messageChunk);
-      } catch (err) {
-        console.error("JSON parse error:", err, "data:", trimmed);
-      }
+      try { handleChunk(JSON.parse(trimmed)); }
+      catch (err) { console.error("JSON parse error:", err, "data:", trimmed); }
     }
 
     if (done) {
       if (sseBuffer.trim()) {
-        try {
-          const messageChunk = JSON.parse(sseBuffer.trim());
-          handleChunk(messageChunk);
-        } catch (err) {
-          console.error("Final chunk parse error:", err);
-        }
+        try { handleChunk(JSON.parse(sseBuffer.trim())); }
+        catch (err) { console.error("Final chunk parse error:", err); }
       }
-      // 确保最终一帧被推送
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-      if (parseTimer !== null) {
-        clearTimeout(parseTimer);
-        parseTimer = null;
-      }
-      contentMdParsed = marked.parse(contentBuffer, { async: false }) as string;
-      if (dirty) flushSet();
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+      const parsed = marked.parse(contentBuffer, { async: false }) as string;
+      const raw = contentBuffer;
+      const reasoning = reasoningBuffer;
+      set((state: any) => {
+        const chats = state.chats.map((c: any) => {
+          if (c.id === chatId) {
+            const message = c.messages.find((m: any) => m.id === lastMsgId);
+            if (message) {
+              message.content = raw;
+              message.contentMd = parsed;
+              message.reasoning = reasoning;
+              message.status = "completed";
+            }
+          }
+          return c;
+        });
+        return { chats };
+      });
       resolve();
       break;
     }
