@@ -5,6 +5,8 @@ import LoginPage from "../pages/Login";
 import ForgetPsd from "../pages/ForgetPsd";
 import AuthGuard from "../components/AuthGuard";
 
+import GamePage from "@/pages/Game";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -21,5 +23,9 @@ export const router = createBrowserRouter([
   {
     path: "/forgot-password",
     element: <ForgetPsd />,
+  },
+  {
+    path: "/game",
+    element: <GamePage />,
   },
 ]);
