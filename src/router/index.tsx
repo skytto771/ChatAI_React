@@ -6,6 +6,8 @@ import ForgetPsd from "../pages/ForgetPsd";
 import AuthGuard from "../components/AuthGuard";
 
 import GamePage from "@/pages/Game";
+import { GameLanding } from "@/pages/Game";
+import PlayablePage from "@/pages/Game/components/PlayablePage";
 
 export const router = createBrowserRouter([
   {
@@ -27,5 +29,9 @@ export const router = createBrowserRouter([
   {
     path: "/game",
     element: <GamePage />,
+    children: [
+      { index: true, element: <GameLanding /> },
+      { path: "playable", element: <PlayablePage /> },
+    ],
   },
 ]);

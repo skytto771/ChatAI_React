@@ -1,0 +1,14 @@
+.playable {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.game {
+  display: block;
+  width: 1280px;
+  height: 720px;
+  border: 0;
+}
