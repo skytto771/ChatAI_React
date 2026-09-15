@@ -89,7 +89,7 @@ function PortfolioLanding() {
                   poster="/portfolio/screens/06-battle.png"
                 >
                   <source
-                    src="/cocos/web-mobile/assets/resources/native/aa/aa03b21d-b900-4137-be12-da8799175132.mp4"
+                    src="/portfolio/screens/demoPreview.mp4"
                     type="video/mp4"
                   />
                 </video>
