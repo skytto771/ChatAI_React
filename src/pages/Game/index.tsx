@@ -2,240 +2,265 @@ import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import styles from "./index.module.scss";
 
-const screenshots = [
-  [
-    "/cocos/web-mobile/assets/resources/native/50/50bbb160-b58b-4ce4-8b3e-30b4600a7adc.png",
-    "废墟城市 · 场景搭建",
-    "01",
-  ],
-  [
-    "/cocos/web-mobile/assets/resources/native/7d/7d81c8d7-abc8-4c34-9655-3293f0f031d7.png",
-    "环境叙事 · 氛围设计",
-    "02",
-  ],
-  [
-    "/cocos/web-mobile/assets/resources/native/52/52985011-5204-4632-bdce-b60a70fbdc77.png",
-    "灯光系统 · 关卡引导",
-    "03",
-  ],
-  [
-    "/cocos/web-mobile/assets/resources/native/f0/f0ec0644-4469-4f28-9454-47a87780f123.png",
-    "探索路线 · 镜头构图",
-    "04",
-  ],
-  [
-    "/cocos/web-mobile/assets/resources/native/83/8352f5d3-c6b1-461c-a820-38254016a7ec.png",
-    "像素资产 · 视觉规范",
-    "05",
-  ],
-  [
-    "/cocos/web-mobile/assets/resources/native/f5/f537f103-7771-4965-a062-aa06239b9f63.png",
-    "交互原型 · Web 适配",
-    "06",
-  ],
+const shots = [
+  ["01-menu.png", "Menu", "主菜单 · 项目入口"],
+  ["02-weapons.png", "Camp / Workshop", "武器工坊 · 6 类武器"],
+  ["03-upgrades.png", "Camp / Upgrade", "属性强化 · 局外成长"],
+  ["04-camp.png", "Camp", "营地 · 行动终端"],
+  ["05-route.png", "Route", "分层路线 · 节点状态"],
+  ["06-battle.png", "Battle", "战斗节点 · 击杀目标"],
+  ["07-boss.png", "Boss Battle", "鸣骨裂颅兽 · Boss 血条"],
 ] as const;
 
-function GameLanding() {
-  const [videoReady, setVideoReady] = useState(false);
-
+function PortfolioLanding() {
+  const [preview, setPreview] = useState<string | null>(null);
   return (
-    <div className={styles.landing}>
-      <header className={styles.header}>
-        <Link className={styles.brand} to="/game">
-          <span className={styles.brandMark}>DX</span>
-          <span>
-            <strong>DESIGN & CODE</strong>
-            <small>PERSONAL PORTFOLIO / 2026</small>
-          </span>
-        </Link>
-        <nav className={styles.nav} aria-label="作品导航">
-          <a href="#overview">概览</a>
-          <a href="#process">负责内容</a>
-          <a href="#gallery">视觉记录</a>
-          <Link className={styles.navPlay} to="/game/playable">
-            试玩 Demo <span>↗</span>
+    <div className={styles.portfolio}>
+      <div className={styles.grain} aria-hidden="true" />
+      <header className={styles.nav}>
+        <div className={`${styles.shell} ${styles.navInner}`}>
+          <Link className={styles.brand} to="/game">
+            DXF / GAME DEV
           </Link>
-        </nav>
+          <nav className={styles.navLinks}>
+            <a href="#demo">演示</a>
+            <a href="#gallery">视觉</a>
+            <a href="#systems">系统</a>
+            <a href="#about">关于</a>
+          </nav>
+        </div>
       </header>
-
-      <main>
-        <section className={styles.hero} id="overview">
-          <div className={styles.heroCopy}>
-            <p className={styles.kicker}>
-              PROJECT 01 <span>/</span> GAME DEVELOPMENT
+      <main id="top">
+        <section className={`${styles.shell} ${styles.hero}`}>
+          <div>
+            <p className={styles.eyebrow}>
+              <i /> COCOS CREATOR · PERSONAL PROJECT
             </p>
             <h1>
-              Echoes
-              <br />
-              <em>After Ashes</em>
+              鸣骨灾变<span>The Ringing Bone Disaster</span>
             </h1>
-            <p className={styles.subtitle}>
-              一款基于 Cocos Creator 的像素叙事探索游戏
+            <p className={styles.heroCopy}>
+              <strong>一款俯视角 Roguelite 生存游戏原型。</strong>
+              <br />
+              从前端开发转入游戏客户端，独立完成玩法拆分、代码整合、编辑器配置与实机验证，使用
+              AI Agent 提升开发效率。
             </p>
-            <p className={styles.lede}>
-              我负责从玩法原型、场景搭建到 Web
-              端发布的完整实现，把一段关于“在废墟中寻找回应”的故事，做成可直接在浏览器体验的作品。
-            </p>
-            <div className={styles.heroActions}>
-              <Link className={styles.primaryButton} to="/game/playable">
-                <span>▶</span> 在线试玩
+            <div className={styles.actions}>
+              <Link className={styles.btn} to="/game/playable">
+                ▶ 立即试玩
               </Link>
-              <a className={styles.textButton} href="#process">
-                查看我的贡献 ↓
+              <a className={styles.btnSecondary} href="#demo">
+                观看演示 ↓
               </a>
             </div>
-            <a className={styles.scrollCue} href="#process">
-              <span /> 向下浏览项目详情
-            </a>
+            <div className={styles.meta}>
+              <div>
+                <b>3.8.8</b>Cocos Creator
+              </div>
+              <div>
+                <b>6 + 3</b>武器 · 敌人
+              </div>
+            </div>
           </div>
-          <div className={styles.heroVisual}>
-            <div className={styles.heroFrame}>
-              <video
-                className={styles.heroVideo}
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={screenshots[0][0]}
-                onCanPlay={() => setVideoReady(true)}
-              >
-                <source
-                  src="/cocos/web-mobile/assets/resources/native/aa/aa03b21d-b900-4137-be12-da8799175132.mp4"
-                  type="video/mp4"
-                />
-              </video>
-              {!videoReady && (
-                <div className={styles.videoFallback} aria-hidden="true" />
-              )}
-              <div className={styles.frameLabel}>GAMEPLAY REEL / 00:42</div>
-            </div>
-            <div className={styles.visualCaption}>
-              <span>WEB MOBILE BUILD</span>
-              <span>COCOS CREATOR 3.x</span>
-            </div>
+          <div className={styles.heroArt}>
+            <img
+              src="/portfolio/screens/01-menu.png"
+              alt="鸣骨灾变主菜单实机截图"
+            />
+            <span>DEMO / IN PROGRESS</span>
           </div>
         </section>
-
-        <section className={styles.projectFacts} aria-label="项目概览">
-          <div>
-            <span>我的角色</span>
-            <strong>独立开发 / 全栈实现</strong>
-          </div>
-          <div>
-            <span>项目周期</span>
-            <strong>2026 · 6 周</strong>
-          </div>
-          <div>
-            <span>技术栈</span>
-            <strong>TypeScript · Cocos · React</strong>
-          </div>
-          <div>
-            <span>交付形式</span>
-            <strong>Web / Desktop Browser</strong>
-          </div>
-        </section>
-
-        <section className={styles.processSection} id="process">
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className={styles.kicker}>ROLE & CONTRIBUTION</p>
-              <h2>我做了什么</h2>
+        <section id="demo">
+          <div className={styles.shell}>
+            <div className={styles.sectionHead}>
+              <div>
+                <p className={styles.kicker}>01 · WATCH IT MOVE</p>
+                <h2>动态演示</h2>
+              </div>
+              {/* <p>先看节奏，再进入试玩。页面已预留完整实机录屏替换位。</p> */}
             </div>
-            <p className={styles.sectionNote}>
-              从第一个交互原型，到现在
-              <br />
-              你正在浏览的这个页面。
-            </p>
-          </div>
-          <div className={styles.processGrid}>
-            <article>
-              <span>01</span>
-              <h3>玩法与交互</h3>
-              <p>
-                设计移动、探索、对话和物品收集的核心循环，建立可复用的状态管理与输入反馈。
-              </p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>场景与视觉</h3>
-              <p>
-                搭建废墟城市关卡，统一像素资产、灯光层级和镜头构图，让环境本身承担叙事。
-              </p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>工程与发布</h3>
-              <p>
-                完成 Cocos Web 构建、资源路径适配，并将游戏嵌入 React
-                作品集，支持在线试玩。
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <section className={styles.gallerySection} id="gallery">
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className={styles.kicker}>SELECTED SCREENS</p>
-              <h2>
-                视觉记录 <em>/ 06</em>
-              </h2>
-            </div>
-            <p className={styles.sectionNote}>
-              项目中的关键画面与
-              <br />
-              实现思路记录。
-            </p>
-          </div>
-          <div className={styles.galleryGrid}>
-            {screenshots.map(([src, title, index], i) => (
-              <figure
-                className={`${styles.galleryItem} ${i === 0 ? styles.featured : ""}`}
-                key={src}
-              >
-                <div className={styles.imageWrap}>
-                  <img src={src} alt={title} loading="lazy" />
-                  <span>{index}</span>
-                  <b>↗</b>
+            <div className={styles.videoWrap}>
+              <div className={styles.videoCard}>
+                <video
+                  controls
+                  muted
+                  loop
+                  playsInline
+                  poster="/portfolio/screens/06-battle.png"
+                >
+                  <source
+                    src="/cocos/web-mobile/assets/resources/native/aa/aa03b21d-b900-4137-be12-da8799175132.mp4"
+                    type="video/mp4"
+                  />
+                </video>
+                <div className={styles.videoNote}>
+                  <strong>实机视频入口</strong>
+                  {/* 当前使用项目动态演示片段，可替换为完整录屏文件。 */}
                 </div>
-                <figcaption>
-                  <strong>{title}</strong>
-                  <small>CASE STUDY</small>
-                </figcaption>
-              </figure>
-            ))}
+              </div>
+              <aside className={styles.videoSide}>
+                <div>
+                  <h3>Playable slice</h3>
+                  <ul>
+                    <li>营地 → 路线 → 战斗 → 奖励</li>
+                    <li>3 类敌人 · 6 类自动武器</li>
+                    <li>普通 / 困难 / 地狱三档难度</li>
+                    <li>Web Desktop 构建试玩</li>
+                  </ul>
+                </div>
+                <Link className={styles.btn} to="/game/playable">
+                  打开试玩 ↗
+                </Link>
+              </aside>
+            </div>
           </div>
         </section>
-
-        <section className={styles.ctaSection}>
-          <div>
-            <p className={styles.kicker}>TRY THE BUILD</p>
-            <h2>
-              亲自体验
-              <br />
-              <em>我的作品。</em>
-            </h2>
+        <section id="gallery">
+          <div className={styles.shell}>
+            <div className={styles.sectionHead}>
+              <div>
+                <p className={styles.kicker}>02 · IN-GAME CAPTURES</p>
+                <h2>实际运行截图</h2>
+              </div>
+              <p>来自当前构建与实机回归的界面、路线、战斗和 Boss 场景。</p>
+            </div>
+            <div className={styles.gallery}>
+              {shots.map(([file, label, title], index) => (
+                <button
+                  className={styles.shot}
+                  key={file}
+                  onClick={() => setPreview(`/portfolio/screens/${file}`)}
+                >
+                  <img src={`/portfolio/screens/${file}`} alt={title} />
+                  <span>
+                    <small>{label}</small>
+                    {title}
+                  </span>
+                  <b>0{index + 1}</b>
+                </button>
+              ))}
+            </div>
           </div>
-          <Link className={styles.ctaButton} to="/game/playable">
-            打开试玩 Demo <span>↗</span>
-          </Link>
+        </section>
+        <section id="systems">
+          <div className={styles.shell}>
+            <div className={styles.sectionHead}>
+              <div>
+                <p className={styles.kicker}>03 · ENGINEERING</p>
+                <h2>我做了什么</h2>
+              </div>
+              <p>从可玩的核心循环出发，把功能拆成可验证的模块。</p>
+            </div>
+            <div className={styles.systems}>
+              <article>
+                <span>01 / FLOW</span>
+                <h3>流程与路线</h3>
+                <p>营地、分层路线、节点状态、Boss 可达性校验和 Run 快照。</p>
+              </article>
+              <article>
+                <span>02 / COMBAT</span>
+                <h3>战斗与成长</h3>
+                <p>自动攻击、投射物、敌人 AI、经验升级、节点奖励与 Boss 战。</p>
+              </article>
+              <article>
+                <span>03 / MAP</span>
+                <h3>地图与导航</h3>
+                <p>Tiled JSON、碰撞、前景遮挡、导航网格、A* 与出生点筛选。</p>
+              </article>
+              <article>
+                <span>04 / TOOLING</span>
+                <h3>AI × Pixel Art</h3>
+                <p>
+                  AI Agent 辅助编码排错；Aseprite 绘制、切图并导出基础帧动画。
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+        <section id="about">
+          <div className={`${styles.shell} ${styles.about}`}>
+            <div>
+              <p className={styles.kicker}>04 · ABOUT THE MAKER</p>
+              <h2>从前端到游戏客户端。</h2>
+              <p>
+                2026 年 6 月 21 日开始学习 Cocos
+                Creator。这个项目是一次持续中的独立实践：我负责需求取舍、代码整合、Cocos
+                编辑器配置、素材处理和实机回归，并借助 AI Agent
+                快速学习与定位问题。
+              </p>
+              <p>
+                目前 Demo 已完成阶段性 Web
+                构建回归和难度调试，虽然有不少缺点，但仍在继续补充完整内容。
+              </p>
+              <div className={styles.stack}>
+                <span>Cocos Creator 3.8.8</span>
+                <span>TypeScript</span>
+                <span>Tiled</span>
+                <span>Aseprite</span>
+                <span>AI Agent</span>
+              </div>
+            </div>
+            <div className={styles.facts}>
+              <div>
+                <span>定位</span>
+                <b>初级游戏客户端 / Cocos Creator</b>
+              </div>
+              <div>
+                <span>开发方式</span>
+                <b>个人独立开发 · AI 辅助</b>
+              </div>
+              <div>
+                <span>当前状态</span>
+                <b>Demo 开发中</b>
+              </div>
+              <div>
+                <span>试玩平台</span>
+                <b>Web Desktop</b>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className={`${styles.shell} ${styles.cta}`}>
+          <div className={styles.ctaBox}>
+            <div>
+              <h2>想看代码和实际运行？</h2>
+              <p>
+                欢迎从试玩开始，也欢迎交流 Cocos、TypeScript 与 AI 协作开发。
+              </p>
+            </div>
+            <Link className={styles.btn} to="/game/playable">
+              进入试玩 ↗
+            </Link>
+          </div>
         </section>
       </main>
-      <footer className={styles.footer}>
-        <span>DX / GAME DEVELOPER</span>
-        <span>OPEN TO OPPORTUNITIES</span>
-        <a href="mailto:hello@example.com">HELLO@EXAMPLE.COM ↗</a>
+      <footer className={`${styles.shell} ${styles.footer}`}>
+        <span>© 2026 DXF · The Ringing Bone Disaster</span>
+        <span>Personal portfolio / Work in progress</span>
       </footer>
+      {preview && (
+        <div
+          className={styles.lightbox}
+          role="dialog"
+          aria-label="截图预览"
+          onClick={() => setPreview(null)}
+        >
+          <button aria-label="关闭预览" onClick={() => setPreview(null)}>
+            ×
+          </button>
+          <img src={preview} alt="截图放大预览" />
+        </div>
+      )}
     </div>
   );
 }
 
 export default function GamePage() {
   const location = useLocation();
-  const isPlayable = location.pathname.endsWith("/playable");
+  const playable = location.pathname.endsWith("/playable");
   return (
     <main className={styles.page}>
-      {isPlayable && (
+      {playable && (
         <Link className={styles.backButton} to="/game">
           ← 返回项目
         </Link>
@@ -245,4 +270,4 @@ export default function GamePage() {
   );
 }
 
-export { GameLanding };
+export { PortfolioLanding };
