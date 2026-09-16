@@ -220,11 +220,11 @@ function PortfolioLanding() {
               </div>
               <div>
                 <span>当前状态</span>
-                <b>Demo 开发中</b>
+                <b>开发中</b>
               </div>
               <div>
                 <span>试玩平台</span>
-                <b>Web Desktop</b>
+                <b>Web</b>
               </div>
             </div>
           </div>
