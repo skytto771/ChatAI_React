@@ -63,10 +63,19 @@ function PortfolioLanding() {
             </div>
           </div>
           <div className={styles.heroArt}>
-            <img
-              src="/portfolio/screens/01-menu.png"
-              alt="鸣骨灾变主菜单实机截图"
-            />
+            <video
+              className={styles.heroVideo}
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="/cocos/web-mobile/assets/resources/native/50/50bbb160-b58b-4ce4-8b3e-30b4600a7adc.png"
+            >
+              <source
+                src="/cocos/web-mobile/assets/resources/native/aa/aa03b21d-b900-4137-be12-da8799175132.mp4"
+                type="video/mp4"
+              />
+            </video>
             <span>DEMO / IN PROGRESS</span>
           </div>
         </section>
