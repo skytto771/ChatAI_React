@@ -233,9 +233,9 @@ function PortfolioLanding() {
           <div className={styles.ctaBox}>
             <div>
               <h2>想看代码和实际运行？</h2>
-              <p>
+              {/* <p>
                 欢迎从试玩开始，也欢迎交流 Cocos、TypeScript 与 AI 协作开发。
-              </p>
+              </p> */}
             </div>
             <Link className={styles.btn} to="/game/playable">
               进入试玩 ↗
@@ -244,7 +244,7 @@ function PortfolioLanding() {
         </section>
       </main>
       <footer className={`${styles.shell} ${styles.footer}`}>
-        <span>© 2026 DXF · The Ringing Bone Disaster</span>
+        <span>© 2026 Xingkong · The Ringing Bone Disaster</span>
         <span>Personal portfolio / Work in progress</span>
       </footer>
       {preview && (
