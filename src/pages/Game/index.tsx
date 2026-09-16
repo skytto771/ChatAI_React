@@ -169,12 +169,12 @@ function PortfolioLanding() {
               <article>
                 <span>02 / COMBAT</span>
                 <h3>战斗与成长</h3>
-                <p>自动攻击、投射物、敌人 AI、经验升级、节点奖励与 Boss 战。</p>
+                <p>自动攻击、敌人 AI、经验升级、节点奖励与 Boss 战。</p>
               </article>
               <article>
                 <span>03 / MAP</span>
                 <h3>地图与导航</h3>
-                <p>Tiled JSON、碰撞、前景遮挡、导航网格、A* 与出生点筛选。</p>
+                <p>Tiled JSON、碰撞、导航网格、A* 与出生点筛选。</p>
               </article>
               <article>
                 <span>04 / TOOLING</span>
